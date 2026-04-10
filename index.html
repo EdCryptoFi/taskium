@@ -1,0 +1,2559 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taskium — Personal Dashboard with AI, Crypto &amp; Productivity</title>
+<meta name="description" content="Taskium is your all-in-one personal dashboard: clock, weather, crypto tracker, notes, AI widgets, quick links and more. Free, no install needed.">
+<meta name="keywords" content="taskium, personal dashboard, productivity, crypto tracker, AI dashboard, organizer, widgets">
+<meta name="author" content="Ed — @EdCriptoFi">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://myorganizer.pages.dev/">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://myorganizer.pages.dev/">
+<meta property="og:title" content="Taskium — Personal Dashboard with AI, Crypto &amp; Productivity">
+<meta property="og:description" content="All-in-one personal dashboard with AI widgets, crypto tracker, live weather, notes, quick links. Customizable &amp; free.">
+<meta property="og:image" content="https://myorganizer.pages.dev/og-image.png">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="Taskium">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://myorganizer.pages.dev/">
+<meta name="twitter:title" content="Taskium — Personal Dashboard">
+<meta name="twitter:description" content="Your personal OS in the browser. AI, crypto, weather, notes &amp; more — fully customizable.">
+<meta name="twitter:image" content="https://myorganizer.pages.dev/og-image.png">
+<meta name="twitter:creator" content="@EdCriptoFi">
+
+<!-- PWA / Favicon — Taskium "T" bolt icon -->
+<meta name="theme-color" content="#1a56db">
+<meta name="color-scheme" content="dark light">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%234d94ff'/><stop offset='1' stop-color='%230d3fa6'/></linearGradient></defs><rect width='64' height='64' rx='12' fill='%230d1b4b'/><polygon points='14,8 50,8 50,20 36,20 36,56 28,56 28,20 14,20' fill='url(%23g)'/><polygon points='34,22 42,22 30,42 38,42 24,58 26,44 20,44' fill='white' opacity='0.9'/></svg>">
+
+<!-- Structured Data — WebApplication -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Taskium",
+  "url": "https://myorganizer.pages.dev/",
+  "description": "Personal dashboard with AI widgets, crypto tracking, live weather, notes and quick links.",
+  "applicationCategory": "ProductivityApplication",
+  "operatingSystem": "Web",
+  "author": { "@type": "Person", "name": "Ed", "url": "https://x.com/EdCriptoFi" },
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "featureList": [
+    "Real-time clock",
+    "Live weather by location",
+    "Crypto tracker via CoinGecko",
+    "AI widgets (OpenAI & Claude)",
+    "Auto-saving notes",
+    "Quick links with favicons",
+    "6 visual themes",
+    "4 usage modes",
+    "Supabase authentication",
+    "PT / EN / ES language support"
+  ]
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+/* ===== RESET ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+/* ===== THEMES ===== */
+:root{
+  --bg:#0f0f0f;--bg2:#1a1a1a;--bg3:#252525;--bg4:#303030;
+  --fg:#e8e8e8;--fg2:#a0a0a0;--fg3:#606060;
+  --accent:#6366f1;--accent2:#818cf8;
+  --border:#2a2a2a;--border2:#383838;
+  --green:#10b981;--red:#ef4444;--yellow:#f59e0b;
+  --shadow:0 2px 12px rgba(0,0,0,.4);
+  --r:10px;--r2:6px;--r3:14px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+}
+[data-theme=light]{
+  --bg:#f0f0f0;--bg2:#ffffff;--bg3:#fafafa;--bg4:#e8e8e8;
+  --fg:#111111;--fg2:#555555;--fg3:#888888;
+  --accent:#4f46e5;--accent2:#6366f1;
+  --border:#e0e0e0;--border2:#d0d0d0;
+  --shadow:0 2px 12px rgba(0,0,0,.08);
+}
+[data-theme=cyberpunk]{
+  --bg:#060614;--bg2:#0e0e2a;--bg3:#141430;--bg4:#1e1e40;
+  --fg:#f0e6ff;--fg2:#a78bfa;--fg3:#6d28d9;
+  --accent:#f000b8;--accent2:#00f5ff;
+  --border:#2d0a4e;--border2:#3d1060;
+  --shadow:0 2px 20px rgba(240,0,184,.2);
+}
+[data-theme=matrix]{
+  --bg:#000;--bg2:#001200;--bg3:#001a00;--bg4:#002200;
+  --fg:#00ff41;--fg2:#00cc33;--fg3:#007a1f;
+  --accent:#00ff41;--accent2:#39ff14;
+  --border:#003300;--border2:#004400;
+  --shadow:0 2px 16px rgba(0,255,65,.1);
+}
+[data-theme=ocean]{
+  --bg:#060d1f;--bg2:#0d1b3e;--bg3:#112347;--bg4:#1a2f5a;
+  --fg:#cce8ff;--fg2:#7fb3d3;--fg3:#4a7fa0;
+  --accent:#38bdf8;--accent2:#7dd3fc;
+  --border:#1e3a5f;--border2:#2a4f7a;
+  --shadow:0 2px 16px rgba(56,189,248,.1);
+}
+[data-theme=sunset]{
+  --bg:#130a00;--bg2:#1f1000;--bg3:#2a1500;--bg4:#382000;
+  --fg:#fff0d0;--fg2:#e8b86d;--fg3:#a07040;
+  --accent:#f59e0b;--accent2:#fbbf24;
+  --border:#3a2000;--border2:#4a2c00;
+  --shadow:0 2px 16px rgba(245,158,11,.12);
+}
+
+/* ===== BASE ===== */
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--fg);
+  font-size:14px;
+  line-height:1.5;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  transition:background .3s,color .3s;
+}
+a{color:var(--accent);text-decoration:none}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;outline:none}
+input,textarea,select{font-family:inherit;font-size:13px;outline:none}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
+/* ===== HEADER ===== */
+#header{
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:200;
+  padding:10px 20px;
+}
+.header-inner{
+  max-width:1400px;margin:0 auto;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+#logo{
+  font-size:18px;font-weight:700;color:var(--accent);
+  white-space:nowrap;letter-spacing:-.3px;
+}
+#searchWrap{flex:1;min-width:160px;max-width:340px;position:relative}
+#searchInput{
+  width:100%;padding:7px 12px;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r2);color:var(--fg);
+  transition:border-color .2s;
+}
+#searchInput:focus{border-color:var(--accent)}
+#searchInput::placeholder{color:var(--fg3)}
+.header-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto}
+.modes{display:flex;gap:4px}
+
+/* ===== BUTTONS ===== */
+.btn{
+  padding:6px 12px;border-radius:var(--r2);
+  background:var(--bg3);border:1px solid var(--border);
+  color:var(--fg);transition:all .15s;white-space:nowrap;
+}
+.btn:hover{background:var(--bg4);border-color:var(--border2)}
+.btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-icon{padding:6px 9px;font-size:15px;line-height:1}
+.btn-sm{padding:4px 8px;font-size:12px}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2);border-color:var(--accent2)}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--fg2)}
+.btn-ghost:hover{background:var(--bg4);color:var(--fg)}
+.btn-danger{background:transparent;border:1px solid var(--red);color:var(--red)}
+.btn-danger:hover{background:var(--red);color:#fff}
+#userBadge{font-size:12px;color:var(--fg2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ===== FREE GRID CANVAS ===== */
+/* #main is a scrollable canvas. Widgets are absolutely positioned
+   inside #grid-canvas which grows to fit content. */
+#main{
+  flex:1;
+  width:100%;
+  overflow-x:hidden;
+  overflow-y:auto;
+  padding:0 10px;   /* 10px side margins so widgets don't stick to browser edges */
+  background:var(--bg);
+  box-sizing:border-box;
+}
+#grid-canvas{
+  position:relative;
+  width:100%;
+  min-height:calc(100vh - 120px);
+  /* dot grid — always visible as reference */
+  background-image:radial-gradient(circle, var(--border2) 1px, transparent 1px);
+  background-size:var(--cell) var(--cell);
+  background-position:calc(var(--gpad)) calc(var(--gpad));
+}
+/* CSS vars for grid math — set on #grid-canvas by JS */
+#grid-canvas{--cell:20px;--gpad:20px;--cols:12}
+
+/* Ghost card that follows cursor during drag */
+#drag-ghost{
+  position:fixed;
+  pointer-events:none;
+  z-index:9999;
+  opacity:.82;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+  border-radius:var(--r3);
+  border:2px solid var(--accent);
+  background:var(--bg2);
+  overflow:hidden;
+  transition:none;
+}
+
+/* ===== WIDGETS — absolutely positioned ===== */
+.widget{
+  position:absolute;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--r3);
+  /* 4px visual gap — inset via box-shadow so it doesn't affect hit area */
+  box-shadow:var(--shadow), inset 0 0 0 0 transparent;
+  outline:3px solid var(--bg);  /* 3px gap from canvas bg color */
+  overflow:hidden;
+  box-sizing:border-box;
+  transition:box-shadow .2s, opacity .15s;
+  display:flex;
+  flex-direction:column;
+}
+.widget:hover{box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.widget.is-dragging-src{opacity:.18;pointer-events:none}
+
+/* Resize handle — bottom-right corner */
+.widget-resize{
+  position:absolute;right:0;bottom:0;
+  width:18px;height:18px;
+  cursor:se-resize;
+  z-index:10;
+  display:flex;align-items:flex-end;justify-content:flex-end;
+  padding:3px;color:var(--fg3);font-size:10px;line-height:1;
+  opacity:0;transition:opacity .15s;
+  user-select:none;
+}
+.widget:hover .widget-resize{opacity:1}
+.widget-resize::after{content:'⠿';transform:rotate(45deg);display:block}
+
+/* Widget head IS the drag zone — full width grab area */
+.widget-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  background:var(--bg3);flex-shrink:0;
+  cursor:grab;
+  user-select:none;
+}
+.widget-head:active{cursor:grabbing}
+/* Keep buttons inside head clickable (not draggable) */
+.widget-head .widget-controls{cursor:default}
+.widget-head .widget-controls button{cursor:pointer}
+/* Handle dot icon — still visible but head handles drag now */
+.widget-drag-handle{
+  padding:0 6px 0 0;color:var(--fg3);font-size:13px;
+  user-select:none;letter-spacing:1px;line-height:1;touch-action:none;
+  pointer-events:none; /* head handles events, not handle alone */
+}
+.widget-title{font-size:13px;font-weight:600;color:var(--fg);display:flex;align-items:center;gap:6px}
+.widget-title span{font-size:15px}
+.widget-controls{display:flex;gap:4px}
+.widget.collapsed .widget-body{display:none}
+.widget.collapsed{height:auto!important}
+
+/* ===== BUILDER TOOLS SECTION ===== */
+.builder-tools{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.tool-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r3);box-shadow:var(--shadow);overflow:hidden;
+  width:100%;
+}
+.tool-card-head{
+  display:flex;align-items:center;gap:8px;
+  padding:11px 16px;border-bottom:1px solid var(--border);
+  background:var(--bg3);font-size:13px;font-weight:600;
+}
+.tool-card-head span{font-size:16px}
+.tool-card-body{padding:12px 16px}
+/* Links in a horizontal wrap row instead of column */
+.tool-links{
+  display:flex;flex-wrap:wrap;gap:8px;
+}
+.tool-link-item{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;background:var(--bg3);
+  border:1px solid var(--border);border-radius:20px;
+  white-space:nowrap;
+}
+.tool-link-item a{
+  font-size:13px;color:var(--fg);
+  text-decoration:none;display:flex;align-items:center;gap:5px;
+}
+.tool-link-item a:hover{color:var(--accent)}
+.tool-link-item a img{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+.tool-link-item .del-link{
+  background:none;border:none;color:var(--fg3);cursor:pointer;
+  padding:0 0 0 4px;font-size:11px;flex-shrink:0;line-height:1;
+}
+.tool-link-item .del-link:hover{color:var(--red)}
+.tool-add-form{
+  display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;
+  padding-top:10px;border-top:1px solid var(--border);
+}
+.tool-add-form input{
+  flex:1;min-width:90px;padding:5px 8px;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r2);color:var(--fg);font-size:12px;
+}
+
+/* ===== MARKET EDIT MODAL ===== */
+.market-edit-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;margin-bottom:12px}
+.market-edit-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);
+}
+.market-edit-item span{flex:1;font-size:13px;font-weight:600;text-transform:uppercase}
+.market-add-form{display:flex;gap:8px}
+.market-add-form input{flex:1;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);color:var(--fg)}
+
+/* ===== EMPTY STATE ===== */
+.empty{text-align:center;padding:24px;color:var(--fg3);font-size:13px}
+.empty-icon{font-size:28px;margin-bottom:8px}
+
+/* ===== CLOCK ===== */
+.clock-time{font-size:42px;font-weight:200;letter-spacing:2px;color:var(--fg);text-align:center;padding:8px 0}
+.clock-date{text-align:center;color:var(--fg2);font-size:13px;padding-bottom:4px}
+
+/* ===== WEATHER ===== */
+.weather-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.weather-item{background:var(--bg3);border-radius:var(--r2);padding:10px 12px}
+.weather-label{font-size:11px;color:var(--fg3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.weather-val{font-size:16px;font-weight:600;color:var(--fg)}
+
+/* ===== LINKS ===== */
+.links-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px}
+.link-item{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:10px 6px;border-radius:var(--r2);
+  background:var(--bg3);border:1px solid var(--border);
+  cursor:pointer;transition:all .15s;position:relative;text-decoration:none;
+}
+.link-item:hover{background:var(--bg4);border-color:var(--border2)}
+.link-item img{width:24px;height:24px;border-radius:4px}
+.link-label{font-size:11px;color:var(--fg2);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:64px}
+.link-remove{
+  position:absolute;top:2px;right:2px;
+  background:var(--red);color:#fff;border:none;border-radius:50%;
+  width:16px;height:16px;font-size:10px;line-height:16px;text-align:center;
+  display:none;cursor:pointer;
+}
+.link-item:hover .link-remove{display:block}
+.link-add-form{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.link-add-form input{flex:1;min-width:100px;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);color:var(--fg)}
+
+/* ===== MARKET ===== */
+.market-list{display:flex;flex-direction:column;gap:8px}
+.market-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 12px;background:var(--bg3);border-radius:var(--r2);
+  border:1px solid var(--border);
+}
+.market-name{font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+.market-price{font-size:15px;font-weight:600}
+.market-change{font-size:12px;padding:2px 7px;border-radius:20px;font-weight:600}
+.up{color:var(--green);background:rgba(16,185,129,.12)}
+.down{color:var(--red);background:rgba(239,68,68,.12)}
+.market-refresh{font-size:11px;color:var(--fg3);margin-top:8px;text-align:right}
+
+/* ===== NOTES ===== */
+.notes-area{
+  width:100%;min-height:120px;resize:vertical;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r2);color:var(--fg);padding:10px;
+  line-height:1.6;
+}
+.notes-area:focus{border-color:var(--accent)}
+.notes-saved{font-size:11px;color:var(--green);margin-top:6px;opacity:0;transition:opacity .3s}
+.notes-saved.show{opacity:1}
+
+/* ===== ALPHA FEED ===== */
+.feed-tabs{display:flex;gap:4px;margin-bottom:12px}
+.feed-tab{padding:5px 12px;border-radius:20px;font-size:12px;background:var(--bg3);border:1px solid var(--border);color:var(--fg2)}
+.feed-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.feed-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto}
+.feed-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;background:var(--bg3);border-radius:var(--r2);
+  border:1px solid var(--border);
+}
+.feed-item-info{flex:1;min-width:0}
+.feed-item-title{font-size:13px;font-weight:500;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feed-item-url{font-size:11px;color:var(--fg3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feed-item-actions{display:flex;gap:4px;flex-shrink:0}
+.feed-add-form{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.feed-add-form input{width:100%;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);color:var(--fg)}
+.feed-count{
+  display:inline-block;font-size:10px;background:var(--accent);color:#fff;
+  border-radius:10px;padding:1px 6px;margin-left:4px;vertical-align:middle;
+}
+
+/* ===== AI PROMPT ===== */
+.ai-prompt-area{
+  width:100%;min-height:90px;resize:vertical;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r2);color:var(--fg);padding:10px;line-height:1.5;
+  margin-bottom:8px;
+}
+.ai-prompt-area:focus{border-color:var(--accent)}
+.ai-actions{display:flex;gap:8px;align-items:center}
+.ai-response{
+  margin-top:12px;padding:12px;background:var(--bg3);
+  border-radius:var(--r2);border:1px solid var(--border);
+  font-size:13px;line-height:1.6;white-space:pre-wrap;max-height:200px;overflow-y:auto;
+}
+.ai-config{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.ai-config input,.ai-config select{
+  width:100%;padding:6px 10px;background:var(--bg3);
+  border:1px solid var(--border);border-radius:var(--r2);color:var(--fg);
+}
+.ai-warning{font-size:11px;color:var(--yellow);margin-top:4px}
+
+/* ===== TO-DO ===== */
+.todo-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;margin-bottom:10px}
+.todo-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;background:var(--bg3);border-radius:var(--r2);border:1px solid var(--border);
+}
+.todo-item.done .todo-text{text-decoration:line-through;color:var(--fg3)}
+.todo-check{width:16px;height:16px;cursor:pointer;accent-color:var(--accent);flex-shrink:0}
+.todo-text{flex:1;font-size:13px;color:var(--fg)}
+.todo-pri{
+  font-size:10px;padding:2px 6px;border-radius:10px;font-weight:600;
+  flex-shrink:0;
+}
+.todo-pri.high{background:rgba(239,68,68,.15);color:var(--red)}
+.todo-pri.med{background:rgba(245,158,11,.15);color:var(--yellow)}
+.todo-pri.low{background:rgba(16,185,129,.15);color:var(--green)}
+.todo-del{background:none;border:none;color:var(--fg3);cursor:pointer;font-size:12px;flex-shrink:0}
+.todo-del:hover{color:var(--red)}
+.todo-add-form{display:flex;gap:6px;flex-wrap:wrap}
+.todo-add-form input{flex:1;min-width:100px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);color:var(--fg);font-size:12px}
+.todo-add-form select{padding:5px 6px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);color:var(--fg);font-size:12px}
+
+/* ===== POMODORO ===== */
+.pomo-display{text-align:center;padding:10px 0}
+.pomo-timer{font-size:52px;font-weight:200;letter-spacing:3px;color:var(--fg);font-variant-numeric:tabular-nums}
+.pomo-label{font-size:12px;color:var(--fg3);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.pomo-controls{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.pomo-stats{display:flex;justify-content:center;gap:16px;margin-top:10px;font-size:12px;color:var(--fg3)}
+.pomo-stat span{color:var(--accent);font-weight:600}
+.pomo-ring{
+  width:100px;height:100px;
+  position:relative;margin:0 auto;
+}
+.pomo-ring svg{transform:rotate(-90deg)}
+.pomo-ring-bg{fill:none;stroke:var(--border2);stroke-width:6}
+.pomo-ring-progress{fill:none;stroke:var(--accent);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .9s linear}
+.pomo-ring-time{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.pomo-ring-time .pomo-timer{font-size:22px}
+
+/* ===== QUOTE ===== */
+.quote-body{text-align:center;padding:10px 4px}
+.quote-text{font-size:15px;line-height:1.6;color:var(--fg);font-style:italic;margin-bottom:10px}
+.quote-author{font-size:12px;color:var(--fg3)}
+.quote-refresh{margin-top:12px}
+
+/* ===== EMBED ===== */
+.embed-form{display:flex;gap:8px;margin-bottom:10px}
+.embed-form input{flex:1;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);color:var(--fg)}
+.embed-frame{width:100%;height:360px;border:1px solid var(--border);border-radius:var(--r2);background:var(--bg3)}
+.embed-warning{font-size:11px;color:var(--fg3);margin-bottom:8px}
+
+/* ===== FOOTER ===== */
+#footer{
+  background:var(--bg2);border-top:1px solid var(--border);
+  padding:10px 20px;text-align:center;
+  font-size:12px;color:var(--fg3);
+}
+#footer strong{color:var(--fg2)}
+
+/* ===== MODALS ===== */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.65);
+  display:flex;align-items:center;justify-content:center;
+  z-index:1000;backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--r3);padding:24px;min-width:320px;max-width:420px;
+  width:90%;box-shadow:0 8px 40px rgba(0,0,0,.5);
+  transform:translateY(8px);transition:transform .2s;
+}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal h2{font-size:16px;font-weight:600;margin-bottom:16px;color:var(--fg)}
+.modal-close{float:right;background:none;border:none;color:var(--fg3);font-size:18px;cursor:pointer;line-height:1}
+.modal-close:hover{color:var(--fg)}
+.form-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.form-row label{font-size:12px;color:var(--fg2);font-weight:500}
+.form-row input{padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);color:var(--fg)}
+.form-row input:focus{border-color:var(--accent)}
+.form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.modal-widget-btn{
+  padding:12px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r2);color:var(--fg);cursor:pointer;
+  text-align:left;transition:all .15s;
+  display:flex;align-items:center;gap:8px;font-size:13px;
+}
+.modal-widget-btn:hover{background:var(--bg4);border-color:var(--accent)}
+.modal-widget-btn .wi{font-size:18px}
+
+/* ===== FOCUS MODE ===== */
+/* In focus mode, dim all widgets except clock & todo */
+body.focus-mode #grid-canvas .widget:not(.focus-keep){
+  opacity:.08;
+  pointer-events:none;
+  filter:blur(1px);
+  transition:opacity .3s, filter .3s;
+}
+body.focus-mode #grid-canvas .widget.focus-keep{
+  outline:3px solid var(--accent) !important;
+  z-index:10;
+  transition:opacity .3s;
+}
+/* Focus mode badge on header */
+body.focus-mode #focusBtn{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#fff;
+  animation:focusPulse 2s ease-in-out infinite;
+}
+@keyframes focusPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.5)}
+  50%{box-shadow:0 0 0 6px rgba(99,102,241,0)}
+}
+/* Focus banner */
+#focus-banner{
+  display:none;
+  position:sticky;
+  top:0;
+  z-index:190;
+  background:var(--accent);
+  color:#fff;
+  font-size:12px;
+  font-weight:600;
+  text-align:center;
+  padding:5px 16px;
+  letter-spacing:.3px;
+}
+body.focus-mode #focus-banner{display:block}
+
+/* ===== TOAST ===== */
+#toast{
+  position:fixed;bottom:24px;right:24px;z-index:2000;
+  display:flex;flex-direction:column;gap:8px;
+}
+.toast-item{
+  padding:10px 16px;border-radius:var(--r2);font-size:13px;
+  background:var(--bg2);border:1px solid var(--border2);
+  box-shadow:var(--shadow);color:var(--fg);
+  animation:slideIn .2s ease;max-width:300px;
+}
+.toast-item.ok{border-color:var(--green);color:var(--green)}
+.toast-item.err{border-color:var(--red);color:var(--red)}
+.toast-item.info{border-color:var(--accent);color:var(--accent2)}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ===== LOADING ===== */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== COMMAND BAR HINT ===== */
+.cmd-hint{font-size:11px;color:var(--fg3);padding:0 0 0 4px}
+
+/* ===== RESPONSIVE — Mobile ===== */
+@media(max-width:767px){
+  /* Header: stack search below logo+buttons */
+  #header{padding:8px 12px}
+  .header-inner{gap:6px;flex-wrap:wrap}
+  #searchWrap{order:3;max-width:100%;width:100%;min-width:0;flex:1 1 100%}
+  .header-right{gap:4px;flex-wrap:nowrap}
+  /* Hide text labels of mode buttons on very small screens */
+  .modes .btn{padding:6px 8px;font-size:12px}
+  #userBadge{max-width:80px}
+
+  /* Modal: full-width on mobile */
+  .modal{width:95vw;max-width:95vw;padding:16px}
+  .modal-grid{grid-template-columns:1fr 1fr}
+
+  /* Mobile grid canvas — switch to vertical flex stacking */
+  #grid-canvas{
+    display:flex !important;
+    flex-direction:column;
+    gap:10px;
+    padding:10px;
+    min-height:unset !important;
+    background-image:none !important;   /* hide dot grid on mobile */
+  }
+
+  /* Widgets: flow layout, full-width, auto-height */
+  .widget{
+    position:relative !important;
+    left:auto !important;
+    top:auto !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:unset;
+  }
+  /* Uncollapse / allow natural height */
+  .widget.collapsed .widget-body{display:none}
+  .widget:not(.collapsed){height:auto !important}
+  /* Limit tall widgets so page doesn't get endless; user can scroll within */
+  .widget-body{max-height:400px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+  /* Touch-friendly tap targets in widget heads */
+  .widget-head{min-height:44px}
+  .widget-controls button{min-width:36px;min-height:36px}
+
+  /* Clock: tighten on small screens */
+  .clock-time{font-size:32px}
+
+  /* Market list scroll */
+  .market-list{max-height:280px;overflow-y:auto}
+
+  /* Feed list */
+  .feed-list{max-height:260px}
+
+  /* Notes textarea */
+  .notes-area{min-height:80px}
+
+  /* Hide resize handle on mobile (no drag/resize) */
+  .widget-resize{display:none !important}
+  /* Header cursor: no grab on mobile */
+  .widget-head{cursor:default !important}
+
+  /* Builder tools: full width */
+  .builder-tools{position:relative !important;left:auto !important;
+    top:auto !important;right:auto !important;margin-top:0}
+
+  /* Footer: stack on mobile */
+  #footer{flex-wrap:wrap;gap:4px;justify-content:center;padding:10px 12px}
+}
+
+/* Slightly larger tablets: 2-column wrap */
+@media(min-width:480px) and (max-width:767px){
+  #grid-canvas{
+    display:flex !important;
+    flex-direction:row;
+    flex-wrap:wrap;
+    align-items:flex-start;
+  }
+  .widget{
+    width:calc(50% - 5px) !important;
+  }
+}
+</style>
+</head>
+<body data-theme="dark">
+
+<!-- HEADER -->
+<header id="header">
+  <div class="header-inner">
+    <a id="logo" href="/" aria-label="Taskium" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+      <svg width="34" height="34" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="tg1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#4d94ff"/>
+            <stop offset="100%" stop-color="#0d3fa6"/>
+          </linearGradient>
+          <linearGradient id="tg2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#63a8ff"/>
+            <stop offset="100%" stop-color="#1a56db"/>
+          </linearGradient>
+        </defs>
+        <!-- Background -->
+        <rect width="64" height="64" rx="12" fill="#0d1b4b"/>
+        <!-- T letter -->
+        <polygon points="10,8 54,8 54,20 36,20 36,58 28,58 28,20 10,20" fill="url(#tg1)"/>
+        <!-- Lightning bolt overlay -->
+        <polygon points="35,18 44,18 30,38 40,38 23,60 27,42 19,42" fill="url(#tg2)" opacity="0.95"/>
+        <!-- Highlight glint -->
+        <polygon points="36,8 42,8 38,14" fill="white" opacity="0.35"/>
+      </svg>
+      <span style="font-size:18px;font-weight:700;color:#4d94ff;letter-spacing:-.3px">Taskium</span>
+    </a>
+    <div id="searchWrap">
+      <input id="searchInput" type="text" placeholder="Pesquisar ou / para comandos" autocomplete="off" aria-label="Busca e comandos">
+    </div>
+    <div class="header-right">
+      <div class="modes" id="modeBar"></div>
+      <button class="btn btn-icon" id="focusBtn" title="Modo Foco — esconde distrações" aria-label="Modo Foco" aria-pressed="false">🎯</button>
+      <button class="btn btn-icon" id="themeBtn" title="Mudar tema" aria-label="Tema">🎨</button>
+      <button class="btn btn-icon" id="addBtn" title="Adicionar widget" aria-label="Adicionar widget">＋</button>
+      <button class="btn btn-icon" id="saveBtn" title="Salvar layout" aria-label="Salvar">💾</button>
+      <span id="userBadge"></span>
+      <button class="btn btn-icon" id="langBtn" title="Idioma / Language" aria-label="Idioma">🌐</button>
+      <button class="btn btn-icon" id="authBtn" title="Login" aria-label="Login/Logout">🔒</button>
+    </div>
+  </div>
+</header>
+
+<!-- FOCUS BANNER -->
+<div id="focus-banner" role="status" aria-live="polite">
+  🎯 Modo Foco ativado — apenas Relógio e To-Do visíveis &nbsp;·&nbsp;
+  <button onclick="toggleFocusMode()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:2px 10px;border-radius:20px;cursor:pointer;font-size:11px">Desativar</button>
+</div>
+
+<!-- MAIN -->
+<main id="main" aria-label="Widgets">
+  <div id="grid-canvas"></div>
+</main>
+
+<!-- FOOTER -->
+<footer id="footer">
+  <span id="visitLabel">Visitas</span>: <strong id="visitCount">0</strong>
+  &nbsp;·&nbsp;
+  <a href="https://x.com/EdCriptoFi" target="_blank" rel="noopener noreferrer" style="color:var(--fg3);text-decoration:none" title="@EdCriptoFi on X">
+    Created by <strong style="color:var(--fg2)">Ed</strong>
+  </a>
+  &nbsp;·&nbsp; Taskium © 2026
+</footer>
+
+<!-- TOAST -->
+<div id="toast" aria-live="polite"></div>
+
+<!-- MODAL: AUTH -->
+<div class="modal-overlay" id="authModal" role="dialog" aria-modal="true" aria-label="Login">
+  <div class="modal">
+    <button class="modal-close" id="authClose" aria-label="Fechar">✕</button>
+    <h2 id="authTitle">Entrar</h2>
+    <form id="authForm" novalidate>
+      <div class="form-row">
+        <label for="authEmail">Email</label>
+        <input type="email" id="authEmail" required autocomplete="email">
+      </div>
+      <div class="form-row">
+        <label for="authPass">Senha</label>
+        <input type="password" id="authPass" required autocomplete="current-password" minlength="6">
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="authSwitch">Criar conta</button>
+        <button type="submit" class="btn btn-primary" id="authSubmit">Entrar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: ADD WIDGET -->
+<div class="modal-overlay" id="addModal" role="dialog" aria-modal="true" aria-label="Adicionar widget">
+  <div class="modal">
+    <button class="modal-close" id="addClose" aria-label="Fechar">✕</button>
+    <h2>Adicionar Widget</h2>
+    <div class="modal-grid" id="widgetPicker"></div>
+  </div>
+</div>
+
+<!-- MODAL: THEME PICKER -->
+<div class="modal-overlay" id="themeModal" role="dialog" aria-modal="true" aria-label="Escolher tema">
+  <div class="modal">
+    <button class="modal-close" id="themeClose" aria-label="Fechar">✕</button>
+    <h2>Escolher Tema</h2>
+    <div class="modal-grid" id="themePicker"></div>
+  </div>
+</div>
+
+<!-- MODAL: MARKET EDIT -->
+<div class="modal-overlay" id="marketModal" role="dialog" aria-modal="true" aria-label="Editar ativos">
+  <div class="modal">
+    <button class="modal-close" id="marketModalClose" aria-label="Fechar">✕</button>
+    <h2>📈 Editar Ativos</h2>
+    <p style="font-size:12px;color:var(--fg3);margin-bottom:12px">IDs do CoinGecko — ex: bitcoin, ethereum, solana, cardano, polkadot</p>
+    <div class="market-edit-list" id="marketEditList"></div>
+    <div class="market-add-form">
+      <input id="marketAddInput" placeholder="ID do token (ex: chainlink)" autocomplete="off">
+      <button class="btn btn-primary btn-sm" id="marketAddBtn">+ Adicionar</button>
+    </div>
+    <div style="margin-top:16px;display:flex;justify-content:flex-end">
+      <button class="btn btn-primary" id="marketSaveBtn">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════
+const SUPA_URL  = 'https://vougtmtkonvhmkdffair.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvdWd0bXRrb252aG1rZGZmYWlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODgzNjQsImV4cCI6MjA5MTI2NDM2NH0.i5d6ko-kJVMFXP7KS55yifoiX9rw8zq3brrG6__AFtg';
+
+const THEMES = [
+  {id:'dark',   label:'Dark',     icon:'🌑'},
+  {id:'light',  label:'Light',    icon:'☀️'},
+  {id:'cyberpunk',label:'Cyberpunk',icon:'🟣'},
+  {id:'matrix', label:'Matrix',   icon:'🟢'},
+  {id:'ocean',  label:'Ocean',    icon:'🌊'},
+  {id:'sunset', label:'Sunset',   icon:'🌅'},
+];
+
+const MODES = {
+  generic: {label:'Generic', icon:'🏠', widgets:['clock','weather','links','notes']},
+  trading: {label:'Trading', icon:'📈', widgets:['market','feed','notes']},
+  content: {label:'Content', icon:'📰', widgets:['feed','ai','notes']},
+  builder: {label:'Builder', icon:'🔧', widgets:['ai','notes','embed','links']},
+};
+
+const TRADING_TOOLS_DEF = [
+  {id:'fav', label:'Favoritos', icon:'⭐',
+   defaults:[
+     {title:'Binance',      url:'https://www.binance.com'},
+     {title:'Coinbase',     url:'https://www.coinbase.com'},
+     {title:'Bybit',        url:'https://www.bybit.com'},
+     {title:'OKX',          url:'https://www.okx.com'},
+     {title:'CoinGecko',    url:'https://www.coingecko.com'},
+     {title:'CoinMarketCap',url:'https://coinmarketcap.com'},
+     {title:'TradingView',  url:'https://www.tradingview.com'},
+     {title:'Messari',      url:'https://messari.io'},
+     {title:'Glassnode',    url:'https://glassnode.com'},
+   ]},
+  {id:'perps', label:'Perps · Spot · Prediction', icon:'📊',
+   defaults:[
+     {title:'Hyperliquid',  url:'https://app.hyperliquid.xyz'},
+     {title:'dYdX',         url:'https://dydx.exchange'},
+     {title:'GMX',          url:'https://gmx.io'},
+     {title:'Drift',        url:'https://app.drift.trade'},
+     {title:'Vertex',       url:'https://vertexprotocol.com'},
+     {title:'Polymarket',   url:'https://polymarket.com'},
+     {title:'Kalshi',       url:'https://kalshi.com'},
+     {title:'Jupiter',      url:'https://jup.ag'},
+     {title:'Uniswap',      url:'https://app.uniswap.org'},
+   ]},
+  {id:'yield', label:'Yield · DeFi', icon:'🌾',
+   defaults:[
+     {title:'Aave',         url:'https://app.aave.com'},
+     {title:'Compound',     url:'https://app.compound.finance'},
+     {title:'Lido',         url:'https://lido.fi'},
+     {title:'Convex',       url:'https://www.convexfinance.com'},
+     {title:'Curve',        url:'https://curve.fi'},
+     {title:'Pendle',       url:'https://app.pendle.finance'},
+     {title:'Ethena',       url:'https://app.ethena.fi'},
+     {title:'DefiLlama',    url:'https://defillama.com'},
+     {title:'Beefy',        url:'https://app.beefy.finance'},
+   ]},
+];
+
+const BUILDER_TOOLS_DEF = [
+  {id:'devdeck', label:'Dev Deck',      icon:'💻',
+   defaults:[
+     {title:'GitHub',      url:'https://github.com'},
+     {title:'GitLab',      url:'https://gitlab.com'},
+     {title:'Vercel',      url:'https://vercel.com'},
+     {title:'Netlify',     url:'https://app.netlify.com'},
+     {title:'Cloudflare',  url:'https://dash.cloudflare.com'},
+     {title:'Supabase',    url:'https://supabase.com/dashboard'},
+     {title:'Railway',     url:'https://railway.app'},
+     {title:'VS Code Web', url:'https://vscode.dev'},
+     {title:'StackOverflow',url:'https://stackoverflow.com'},
+     {title:'DevDocs',     url:'https://devdocs.io'},
+     {title:'Can I Use',   url:'https://caniuse.com'},
+     {title:'Regex101',    url:'https://regex101.com'},
+     {title:'JSON Crack',  url:'https://jsoncrack.com'},
+     {title:'Excalidraw',  url:'https://excalidraw.com'},
+   ]},
+  {id:'llms',   label:'LLMs',         icon:'🧠',
+   defaults:[
+     {title:'ChatGPT',    url:'https://chat.openai.com'},
+     {title:'Claude',     url:'https://claude.ai'},
+     {title:'Gemini',     url:'https://gemini.google.com'},
+     {title:'Grok',       url:'https://grok.x.ai'},
+     {title:'Mistral',    url:'https://chat.mistral.ai'},
+     {title:'Perplexity', url:'https://www.perplexity.ai'},
+   ]},
+  {id:'image',  label:'Image Editor',  icon:'🎨',
+   defaults:[
+     {title:'Midjourney', url:'https://www.midjourney.com'},
+     {title:'DALL·E',     url:'https://labs.openai.com'},
+     {title:'Leonardo AI',url:'https://app.leonardo.ai'},
+     {title:'Adobe Firefly',url:'https://firefly.adobe.com'},
+     {title:'Ideogram',   url:'https://ideogram.ai'},
+   ]},
+  {id:'video',  label:'Video Editor',  icon:'🎬',
+   defaults:[
+     {title:'RunwayML',   url:'https://app.runwayml.com'},
+     {title:'Sora',       url:'https://sora.com'},
+     {title:'Kling AI',   url:'https://klingai.com'},
+     {title:'Pika',       url:'https://pika.art'},
+     {title:'HeyGen',     url:'https://www.heygen.com'},
+   ]},
+];
+
+const WIDGET_DEF = {
+  clock:    {label:'Clock',        icon:'🕐'},
+  weather:  {label:'Weather',      icon:'🌤'},
+  links:    {label:'Quick Links',  icon:'🔗'},
+  market:   {label:'Market Radar', icon:'📈'},
+  notes:    {label:'Notes',        icon:'📝'},
+  feed:     {label:'Alpha Feed',   icon:'📰'},
+  ai:       {label:'AI Prompt',    icon:'🤖'},
+  embed:    {label:'Embed',        icon:'🖼'},
+  todo:     {label:'To-Do',        icon:'✅'},
+  pomodoro: {label:'Pomodoro',     icon:'⏱'},
+  quote:    {label:'Daily Quote',  icon:'💬'},
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const S = {
+  theme: 'dark',
+  mode:  'generic',
+  lang:  'en',
+  widgets: [],      // [{id,type,collapsed,data:{}}]
+  user:  null,
+  isLogin: true,    // auth modal mode
+};
+
+// ═══════════════════════════════════════════════════════
+// SUPABASE
+// ═══════════════════════════════════════════════════════
+let sb = null;
+function initSupa() {
+  try {
+    sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    sb.auth.onAuthStateChange((_ev, session) => {
+      S.user = session?.user ?? null;
+      renderUserBadge();
+      if (S.user) loadFromSupa();
+    });
+  } catch(e) { console.warn('Supabase init failed:', e); }
+}
+
+async function supaSignIn(email, pw) {
+  if (!sb) return toast('Supabase não disponível', 'err');
+  const {error} = await sb.auth.signInWithPassword({email, password: pw});
+  if (error) throw error;
+}
+async function supaSignUp(email, pw) {
+  if (!sb) return toast('Supabase não disponível', 'err');
+  const {error} = await sb.auth.signUp({email, password: pw});
+  if (error) throw error;
+}
+async function supaSignOut() {
+  if (sb) await sb.auth.signOut();
+  S.user = null;
+  renderUserBadge();
+  toast('Até logo!', 'ok');
+}
+
+async function loadFromSupa() {
+  if (!sb || !S.user) return;
+  try {
+    const {data} = await sb.from('profiles').select('preferred_theme,preferred_mode').eq('id', S.user.id).single();
+    if (data) {
+      if (data.preferred_theme) applyTheme(data.preferred_theme, false);
+      if (data.preferred_mode) switchMode(data.preferred_mode, false);
+    }
+    const {data: layouts} = await sb.from('layouts').select('mode,widgets').eq('user_id', S.user.id);
+    if (layouts && layouts.length) {
+      const cur = layouts.find(l => l.mode === S.mode);
+      if (cur && Array.isArray(cur.widgets) && cur.widgets.length) {
+        S.widgets = cur.widgets;
+        renderAll();
+      }
+    }
+    // visit counter
+    sb.rpc('increment_visit').then(({data:cnt}) => {
+      if (cnt) el('visitCount').textContent = cnt;
+    });
+  } catch(e) { console.warn('Load from Supabase:', e); }
+}
+
+async function saveToSupa() {
+  if (!sb || !S.user) return;
+  try {
+    await sb.from('profiles').upsert({
+      id: S.user.id,
+      preferred_theme: S.theme,
+      preferred_mode:  S.mode,
+    });
+    await sb.from('layouts').upsert({
+      user_id: S.user.id,
+      mode: S.mode,
+      widgets: S.widgets,
+    }, {onConflict: 'user_id,mode'});
+  } catch(e) { console.warn('Save to Supabase:', e); }
+}
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+const el = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function toast(msg, type='info', dur=3000) {
+  const d = document.createElement('div');
+  d.className = `toast-item ${type}`;
+  d.textContent = msg;
+  el('toast').appendChild(d);
+  setTimeout(() => d.remove(), dur);
+}
+
+function openModal(id)  { el(id).classList.add('open'); }
+function closeModal(id) { el(id).classList.remove('open'); }
+
+function debounce(fn, ms) {
+  let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+}
+
+function uid() { return Math.random().toString(36).slice(2,9); }
+
+function validURL(s) {
+  try { new URL(s); return true; } catch { return false; }
+}
+function rootDomain(url) {
+  try { return new URL(url).hostname; } catch { return ''; }
+}
+
+function ls_get(k, def) {
+  try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch { return def; }
+}
+function ls_set(k, v) {
+  try { localStorage.setItem(k, JSON.stringify(v)); } catch {}
+}
+
+// ═══════════════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════════════
+function applyTheme(id, save=true) {
+  if (!THEMES.find(t => t.id === id)) return;
+  S.theme = id;
+  document.body.setAttribute('data-theme', id);
+  if (save) {
+    ls_set('theme', id);
+    saveToSupa();
+  }
+  // update picker active state
+  document.querySelectorAll('.theme-opt').forEach(b => b.classList.toggle('active', b.dataset.theme === id));
+}
+
+function buildThemePicker() {
+  el('themePicker').innerHTML = THEMES.map(t => `
+    <button class="modal-widget-btn theme-opt ${S.theme===t.id?'active':''}" data-theme="${t.id}">
+      <span class="wi">${t.icon}</span>${t.label}
+    </button>
+  `).join('');
+  el('themePicker').querySelectorAll('.theme-opt').forEach(b => {
+    b.addEventListener('click', () => { applyTheme(b.dataset.theme); closeModal('themeModal'); });
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// MODES
+// ═══════════════════════════════════════════════════════
+function buildModeBar() {
+  el('modeBar').innerHTML = Object.entries(MODES).map(([id,m]) => `
+    <button class="btn btn-sm ${S.mode===id?'active':''}" data-mode="${id}" aria-pressed="${S.mode===id}">${m.label}</button>
+  `).join('');
+  el('modeBar').querySelectorAll('[data-mode]').forEach(b => {
+    b.addEventListener('click', () => switchMode(b.dataset.mode));
+  });
+}
+
+function switchMode(id, save=true) {
+  if (!MODES[id]) return;
+  // save current mode first
+  if (save) persistState();
+
+  S.mode = id;
+  // load saved layout for this mode, or use defaults
+  const saved = ls_get(`layout_${id}`, null);
+  if (saved && Array.isArray(saved) && saved.length) {
+    S.widgets = saved;
+  } else {
+    S.widgets = MODES[id].widgets.map(type => ({id: uid(), type, collapsed: false, data: {}}));
+  }
+
+  if (save) ls_set('mode', id);
+  buildModeBar();
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════
+// WIDGET MANAGEMENT
+// ═══════════════════════════════════════════════════════
+function addWidget(type) {
+  if (!WIDGET_DEF[type]) return;
+  const nw = {id: uid(), type, collapsed: false, data: {}};
+  // Position will be assigned in renderAll via ensurePos
+  S.widgets.push(nw);
+  renderAll();
+  persistState();
+  toast(`${WIDGET_DEF[type].label} adicionado`, 'ok');
+}
+
+function removeWidget(wid) {
+  S.widgets = S.widgets.filter(w => w.id !== wid);
+  renderAll();
+  persistState();
+}
+
+function toggleCollapse(wid) {
+  const w = S.widgets.find(w => w.id === wid);
+  if (!w) return;
+  w.collapsed = !w.collapsed;
+  const node = canvas()?.querySelector(`.widget[data-wid="${wid}"]`);
+  if (node) {
+    node.classList.toggle('collapsed', w.collapsed);
+    const cb = node.querySelector('.collapse-btn');
+    if (cb) cb.textContent = w.collapsed ? '▲' : '▼';
+    applyPos(node, w);
+  }
+  persistState();
+}
+
+function getWidget(wid) { return S.widgets.find(w => w.id === wid); }
+
+function updateData(wid, patch) {
+  const w = getWidget(wid);
+  if (w) { Object.assign(w.data, patch); persistState(); }
+}
+
+// ═══════════════════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════════════════
+function persistState() {
+  ls_set(`layout_${S.mode}`, S.widgets);
+  ls_set('theme', S.theme);
+  ls_set('mode', S.mode);
+}
+
+function saveAll() {
+  persistState();
+  saveToSupa();
+  toast('Layout salvo!', 'ok');
+}
+
+// ═══════════════════════════════════════════════════════
+// FREE GRID LAYOUT ENGINE
+// ═══════════════════════════════════════════════════════
+// Cell size in px. All positions/sizes stored as cell units.
+const CELL = 20;   // px per grid unit
+const GPAD = 20;   // canvas padding px
+const COL_W = 17;  // default widget width  (units) ≈ 340px
+const COL_H = 16;  // default widget height (units) ≈ 320px
+const MIN_W = 10;  // min resize width  units
+const MIN_H = 8;   // min resize height units
+
+// Mobile detection — true when viewport width < 768px
+function isMobile() { return window.innerWidth < 768; }
+
+function canvas() { return document.getElementById('grid-canvas'); }
+
+// Snap a canvas-relative px position (from origin 0,0) to grid col/row (1-based)
+// pos = px from canvas left/top edge (NOT including padding)
+function snapGrid(posPx) { return Math.max(1, Math.round(posPx / CELL)); }
+// Convert grid unit (1-based) → canvas-relative px (including padding)
+function toPx(u)         { return GPAD + (u - 1) * CELL; }
+
+// Place a new widget: find first free slot reading left-to-right, top-to-bottom
+function findFreeSlot(wW, wH) {
+  const occupied = S.widgets.filter(w => w.col && w.row).map(w => ({
+    c: w.col, r: w.row, w: w.w||COL_W, h: w.h||COL_H
+  }));
+  const canvasW = canvas()?.offsetWidth || 800;
+  const cols = Math.max(6, Math.floor((canvasW - GPAD*2) / CELL));
+  for (let r = 1; r < 300; r++) {
+    for (let c = 1; c + wW - 1 <= cols; c++) {
+      const fits = !occupied.some(o =>
+        c < o.c + o.w && c + wW > o.c &&
+        r < o.r + o.h && r + wH > o.r
+      );
+      if (fits) return {col: c, row: r};
+    }
+  }
+  return {col: 1, row: 1};
+}
+
+// Ensure widget has col/row/w/h
+function ensurePos(w) {
+  if (!w.col || !w.row) {
+    const slot = findFreeSlot(w.w||COL_W, w.h||COL_H);
+    w.col = slot.col;
+    w.row = slot.row;
+  }
+  if (!w.w) w.w = COL_W;
+  if (!w.h) w.h = COL_H;
+}
+
+// Apply position + size to DOM node
+// toPx(col) = GPAD + (col-1)*CELL  →  left edge of that column
+function applyPos(node, w) {
+  if (isMobile()) {
+    // On mobile: CSS handles layout via flex; just clear any inline absolute styles
+    node.style.left   = '';
+    node.style.top    = '';
+    node.style.width  = '';
+    node.style.height = '';
+    return;
+  }
+  node.style.left   = toPx(w.col) + 'px';
+  node.style.top    = toPx(w.row) + 'px';
+  node.style.width  = (w.w * CELL) + 'px';
+  node.style.height = w.collapsed ? '' : (w.h * CELL) + 'px';
+}
+
+// Grow canvas to fit all widgets
+function fitCanvas() {
+  const c = canvas();
+  if (!c) return;
+  if (isMobile()) { c.style.minHeight = ''; return; } // mobile: natural height
+  const maxBot = S.widgets.reduce((m, w) => {
+    return Math.max(m, toPx(w.row||1) + ((w.h||COL_H) * CELL) + GPAD);
+  }, 400);
+  c.style.minHeight = maxBot + 'px';
+}
+
+function renderAll() {
+  const c = canvas();
+  if (!c) return;
+
+  // Remove stale widget nodes
+  const currentIds = new Set(S.widgets.map(w => w.id));
+  c.querySelectorAll('.widget[data-wid]').forEach(node => {
+    if (!currentIds.has(node.dataset.wid)) node.remove();
+  });
+
+  // Remove tool sections when switching modes
+  c.querySelectorAll('.builder-tools').forEach(el => {
+    const ns = el.dataset.ns;
+    if ((ns === 'builder' && S.mode !== 'builder') ||
+        (ns === 'trading' && S.mode !== 'trading')) {
+      el.remove();
+    }
+  });
+
+  // Add / update widgets
+  S.widgets.forEach(w => {
+    ensurePos(w);
+    let node = c.querySelector(`.widget[data-wid="${w.id}"]`);
+    if (!node) {
+      node = buildWidgetShell(w);
+      c.appendChild(node);
+      mountWidgetContent(w, node.querySelector('.widget-body'));
+    }
+    applyPos(node, w);
+    node.classList.toggle('collapsed', !!w.collapsed);
+    const cb = node.querySelector('.collapse-btn');
+    if (cb) cb.textContent = w.collapsed ? '▲' : '▼';
+  });
+
+  // Helper: append a tool section below all widgets
+  function appendToolSection(sectionEl, nsName) {
+    sectionEl.dataset.ns = nsName;
+    if (isMobile()) {
+      sectionEl.style.position = 'relative';
+      sectionEl.style.left = '';
+      sectionEl.style.right = '';
+      sectionEl.style.top = '';
+      sectionEl.style.marginTop = '8px';
+    } else {
+      const maxRow = S.widgets.reduce((m, w) => Math.max(m, (w.row||1) + (w.h||COL_H)), 1);
+      sectionEl.style.position = 'absolute';
+      sectionEl.style.left  = GPAD + 'px';
+      sectionEl.style.right = GPAD + 'px';
+      sectionEl.style.top   = (toPx(maxRow) + CELL + 20) + 'px';
+    }
+    c.appendChild(sectionEl);
+  }
+
+  // Builder tool cards
+  if (S.mode === 'builder' && !c.querySelector('.builder-tools[data-ns="builder"]')) {
+    appendToolSection(buildBuilderTools(), 'builder');
+  }
+
+  // Trading tool cards
+  if (S.mode === 'trading' && !c.querySelector('.builder-tools[data-ns="trading"]')) {
+    appendToolSection(buildTradingTools(), 'trading');
+  }
+
+  fitCanvas();
+}
+
+// ═══════════════════════════════════════════════════════
+// GENERIC TOOL SECTION BUILDER (used for Trading + Builder)
+// ═══════════════════════════════════════════════════════
+function buildToolSection(defs, nsPrefix) {
+  const section = document.createElement('div');
+  section.className = 'builder-tools';
+
+  defs.forEach(tool => {
+    const key = `${nsPrefix}_${tool.id}`;
+    const saved = ls_get(key, null);
+    const links = saved || tool.defaults.map(d => ({...d, id: uid()}));
+    if (!saved) ls_set(key, links);
+
+    const card = document.createElement('div');
+    card.className = 'tool-card';
+    card.dataset.toolId = tool.id;
+
+    function renderCard() {
+      const curLinks = ls_get(key, []);
+      card.innerHTML = `
+        <div class="tool-card-head"><span>${tool.icon}</span>${tool.label}</div>
+        <div class="tool-card-body">
+          <div class="tool-links">
+            ${curLinks.map(lnk => `
+              <div class="tool-link-item">
+                <a href="${esc(lnk.url)}" target="_blank" rel="noopener noreferrer">
+                  <img src="https://www.google.com/s2/favicons?domain=${esc(rootDomain(lnk.url))}&sz=32" alt="" width="16" height="16" loading="lazy">
+                  ${esc(lnk.title)}
+                </a>
+                <button class="del-link" data-lid="${esc(lnk.id)}" title="Remover">✕</button>
+              </div>`).join('')}
+            ${curLinks.length === 0 ? '<div class="empty" style="padding:10px">Nenhum link</div>' : ''}
+          </div>
+          <div class="tool-add-form">
+            <input class="tl-title" placeholder="Título" style="flex:1;min-width:70px">
+            <input class="tl-url" placeholder="https://..." style="flex:2;min-width:100px">
+            <button class="btn btn-primary btn-sm tl-add">+</button>
+          </div>
+        </div>`;
+
+      card.querySelectorAll('.del-link').forEach(b => {
+        b.addEventListener('click', () => {
+          const cur = ls_get(key, []);
+          ls_set(key, cur.filter(l => l.id !== b.dataset.lid));
+          renderCard();
+        });
+      });
+
+      card.querySelector('.tl-add').addEventListener('click', () => {
+        const ti = card.querySelector('.tl-title').value.trim();
+        const u  = card.querySelector('.tl-url').value.trim();
+        if (!ti) { toast('Informe um título','err'); return; }
+        if (!validURL(u)) { toast('URL inválida','err'); return; }
+        const cur = ls_get(key, []);
+        cur.push({id: uid(), title: ti, url: u});
+        ls_set(key, cur);
+        renderCard();
+      });
+      card.querySelector('.tl-url').addEventListener('keydown', e => {
+        if (e.key === 'Enter') card.querySelector('.tl-add').click();
+      });
+    }
+
+    renderCard();
+    section.appendChild(card);
+  });
+
+  return section;
+}
+
+// ═══════════════════════════════════════════════════════
+// BUILDER / TRADING TOOL CARDS — delegate to generic builder
+// ═══════════════════════════════════════════════════════
+function buildBuilderTools()  { return buildToolSection(BUILDER_TOOLS_DEF, 'btool'); }
+function buildTradingTools()  { return buildToolSection(TRADING_TOOLS_DEF, 'ttool'); }
+
+function buildWidgetShell(w) {
+  const def = WIDGET_DEF[w.type] || {label: w.type, icon: '📦'};
+  const div = document.createElement('div');
+  div.className = 'widget';
+  div.dataset.wid = w.id;
+  div.setAttribute('role', 'region');
+  div.setAttribute('aria-label', def.label);
+  div.innerHTML = `
+    <div class="widget-head">
+      <div class="widget-title">
+        <span class="widget-drag-handle" title="Arrastar">⠿</span>
+        <span>${def.icon}</span>${def.label}
+      </div>
+      <div class="widget-controls">
+        <button class="btn btn-ghost btn-icon collapse-btn" aria-label="Minimizar" title="Minimizar">▼</button>
+        <button class="btn btn-ghost btn-icon remove-btn" aria-label="Remover" title="Remover">✕</button>
+      </div>
+    </div>
+    <div class="widget-body"></div>
+    <div class="widget-resize" title="Redimensionar"></div>
+  `;
+  div.querySelector('.collapse-btn').addEventListener('click', () => toggleCollapse(w.id));
+  div.querySelector('.remove-btn').addEventListener('click', () => {
+    if (confirm(`Remover widget ${def.label}?`)) removeWidget(w.id);
+  });
+  attachDragEvents(div, w);
+  attachResizeEvents(div, w);
+  return div;
+}
+
+// ═══════════════════════════════════════════════════════
+// DRAG — free move, snaps to grid on drop
+// The entire widget-head is the drag zone.
+// Buttons inside head use stopPropagation to stay clickable.
+// ═══════════════════════════════════════════════════════
+function attachDragEvents(node, w) {
+  // Skip mouse drag on mobile — touch interaction is handled separately
+  if (isMobile()) return;
+  // Use the whole header as drag zone
+  const handle = node.querySelector('.widget-head');
+  if (!handle) return;
+
+  // Make control buttons NOT trigger drag
+  node.querySelectorAll('.widget-controls button, .widget-controls a').forEach(btn => {
+    btn.addEventListener('mousedown', e => e.stopPropagation());
+  });
+
+  handle.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const canvasEl = canvas();
+    const cRect    = canvasEl.getBoundingClientRect();
+    const nRect    = node.getBoundingClientRect();
+
+    // Grab offset relative to card top-left
+    const offX = e.clientX - nRect.left;
+    const offY = e.clientY - nRect.top;
+
+    // Create ghost
+    const ghost = document.createElement('div');
+    ghost.id = 'drag-ghost';
+    ghost.style.width  = nRect.width  + 'px';
+    ghost.style.height = Math.min(nRect.height, 100) + 'px';
+    const hClone = node.querySelector('.widget-head')?.cloneNode(true);
+    if (hClone) ghost.appendChild(hClone);
+    document.body.appendChild(ghost);
+
+    node.classList.add('is-dragging-src');
+    canvasEl.classList.add('drag-active');
+    document.body.style.cursor     = 'grabbing';
+    document.body.style.userSelect = 'none';
+
+    const getSnapped = ev => {
+      // canvas-relative position of the card's top-left corner
+      const mainEl  = el('main');
+      const rawLeft = ev.clientX - cRect.left - offX + mainEl.scrollLeft;
+      const rawTop  = ev.clientY - cRect.top  - offY + mainEl.scrollTop;
+      // Convert to grid col/row (1-based), snapping to nearest cell
+      const col = Math.max(1, snapGrid(rawLeft - GPAD + CELL/2));
+      const row = Math.max(1, snapGrid(rawTop  - GPAD + CELL/2));
+      return {col, row};
+    };
+
+    const onMove = ev => {
+      // Move ghost (fixed to viewport)
+      ghost.style.left = (ev.clientX - offX) + 'px';
+      ghost.style.top  = (ev.clientY - offY) + 'px';
+
+      // Live snapped preview of source card on canvas
+      const {col, row} = getSnapped(ev);
+      node.style.left = toPx(col) + 'px';
+      node.style.top  = toPx(row) + 'px';
+    };
+
+    const onUp = ev => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onUp);
+      ghost.remove();
+      node.classList.remove('is-dragging-src');
+      canvasEl.classList.remove('drag-active');
+      document.body.style.cursor     = '';
+      document.body.style.userSelect = '';
+
+      // Commit final position
+      const {col, row} = getSnapped(ev);
+      w.col = col;
+      w.row = row;
+      applyPos(node, w);
+      fitCanvas();
+      persistState();
+    };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// RESIZE — drag bottom-right handle to resize
+// ═══════════════════════════════════════════════════════
+function attachResizeEvents(node, w) {
+  if (isMobile()) return;
+  const handle = node.querySelector('.widget-resize');
+  if (!handle) return;
+
+  handle.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startW = w.w || COL_W;
+    const startH = w.h || COL_H;
+
+    document.body.style.cursor     = 'se-resize';
+    document.body.style.userSelect = 'none';
+
+    const onMove = ev => {
+      const dxU = Math.round((ev.clientX - startX) / CELL);
+      const dyU = Math.round((ev.clientY - startY) / CELL);
+      w.w = Math.max(MIN_W, startW + dxU);
+      w.h = Math.max(MIN_H, startH + dyU);
+      node.style.width  = (w.w * CELL) + 'px';
+      node.style.height = (w.h * CELL) + 'px';
+    };
+
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onUp);
+      document.body.style.cursor     = '';
+      document.body.style.userSelect = '';
+      fitCanvas();
+      persistState();
+    };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  });
+}
+
+function mountWidgetContent(w, body) {
+  switch(w.type) {
+    case 'clock':    mountClock(w, body);    break;
+    case 'weather':  mountWeather(w, body);  break;
+    case 'links':    mountLinks(w, body);    break;
+    case 'market':   mountMarket(w, body);   break;
+    case 'notes':    mountNotes(w, body);    break;
+    case 'feed':     mountFeed(w, body);     break;
+    case 'ai':       mountAI(w, body);       break;
+    case 'embed':    mountEmbed(w, body);    break;
+    case 'todo':     mountTodo(w, body);     break;
+    case 'pomodoro': mountPomodoro(w, body); break;
+    case 'quote':    mountQuote(w, body);    break;
+    default: body.innerHTML = `<div class="empty">Unknown widget</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// WIDGET: CLOCK
+// ═══════════════════════════════════════════════════════
+function mountClock(w, body) {
+  body.innerHTML = `<div class="clock-time" id="ct-${w.id}">--:--:--</div><div class="clock-date" id="cd-${w.id}"></div>`;
+  function tick() {
+    const now  = new Date();
+    const te   = el(`ct-${w.id}`);
+    const de   = el(`cd-${w.id}`);
+    if (!te) return;
+    const loc  = S.lang === 'pt' ? 'pt-BR' : S.lang === 'es' ? 'es-ES' : 'en-US';
+    te.textContent = now.toLocaleTimeString(loc, {hour12: false});
+    de.textContent = now.toLocaleDateString(loc, {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  }
+  tick();
+  const iv = setInterval(tick, 1000);
+  body.closest('.widget').addEventListener('remove', () => clearInterval(iv));
+}
+
+// ═══════════════════════════════════════════════════════
+// WIDGET: WEATHER
+// ═══════════════════════════════════════════════════════
+function mountWeather(w, body) {
+  body.innerHTML = `<div id="wx-${w.id}"><div class="empty"><span class="spinner"></span>${S.lang==='es'?'Cargando clima...':S.lang==='en'?'Loading weather...':'Carregando clima...'}</div></div>`;
+
+  // WMO weather code → emoji + description
+  const WMO = {
+    0:'☀️ Clear',1:'🌤 Mostly clear',2:'⛅ Partly cloudy',3:'☁️ Overcast',
+    45:'🌫 Fog',48:'🌫 Icy fog',
+    51:'🌦 Light drizzle',53:'🌦 Drizzle',55:'🌧 Heavy drizzle',
+    61:'🌧 Light rain',63:'🌧 Rain',65:'🌧 Heavy rain',
+    71:'🌨 Light snow',73:'🌨 Snow',75:'❄️ Heavy snow',77:'🌨 Snow grains',
+    80:'🌦 Showers',81:'🌧 Rain showers',82:'⛈ Heavy showers',
+    85:'🌨 Snow showers',86:'❄️ Heavy snow showers',
+    95:'⛈ Thunderstorm',96:'⛈ Thunderstorm+hail',99:'⛈ Heavy thunderstorm+hail'
+  };
+
+  async function fetchWx() {
+    const c = el(`wx-${w.id}`);
+    if (!c) return;
+    try {
+      // Step 1: Get location via ip-api (CORS open, free)
+      const geoR = await fetch('https://ip-api.com/json/?fields=lat,lon,city,country', {signal: AbortSignal.timeout(6000)});
+      const geo  = await geoR.json();
+      const {lat, lon, city, country} = geo;
+
+      // Step 2: Get weather via Open-Meteo (CORS open, free, no key)
+      const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&wind_speed_unit=kmh&timezone=auto`;
+      const wxR  = await fetch(wxUrl, {signal: AbortSignal.timeout(8000)});
+      const wx   = await wxR.json();
+      const cur  = wx.current;
+      const cond = WMO[cur.weather_code] || '🌡 Unknown';
+
+      c.innerHTML = `
+        <div class="weather-grid">
+          <div class="weather-item"><div class="weather-label">${t('weather_city')}</div><div class="weather-val" style="font-size:13px">${esc(city)}, ${esc(country)}</div></div>
+          <div class="weather-item"><div class="weather-label">${t('weather_temp')}</div><div class="weather-val">${cur.temperature_2m}°C <span style="font-size:12px;color:var(--fg3)">(feels ${cur.apparent_temperature}°C)</span></div></div>
+          <div class="weather-item"><div class="weather-label">${t('weather_cond')}</div><div class="weather-val" style="font-size:13px">${esc(cond)}</div></div>
+          <div class="weather-item"><div class="weather-label">${t('weather_hum')}</div><div class="weather-val">${cur.relative_humidity_2m}% <span style="font-size:12px;color:var(--fg3)">${cur.wind_speed_10m} km/h</span></div></div>
+        </div>`;
+    } catch(e) {
+      if (c) c.innerHTML = `<div class="empty">${S.lang==='en'?'Error loading weather':S.lang==='es'?'Error al cargar clima':'Erro ao carregar clima'}</div>`;
+    }
+  }
+  fetchWx();
+  const iv = setInterval(fetchWx, 600000);
+  body.closest('.widget').addEventListener('remove', () => clearInterval(iv));
+}
+
+// ═══════════════════════════════════════════════════════
+// WIDGET: QUICK LINKS
+// ═══════════════════════════════════════════════════════
+function mountLinks(w, body) {
+  if (!w.data.links) w.data.links = [];
+  function render() {
+    body.innerHTML = `
+      <div class="links-grid" id="lg-${w.id}">
+        ${w.data.links.map(lnk => `
+          <a class="link-item" href="${esc(lnk.url)}" target="_blank" rel="noopener noreferrer" title="${esc(lnk.title)}">
+            <img src="https://www.google.com/s2/favicons?domain=${esc(rootDomain(lnk.url))}&sz=32" alt="" loading="lazy" width="24" height="24">
+            <span class="link-label">${esc(lnk.title)}</span>
+            <button class="link-remove" data-url="${esc(lnk.url)}" aria-label="Remover link" title="Remover">✕</button>
+          </a>
+        `).join('')}
+        ${w.data.links.length === 0 ? '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔗</div>Nenhum link ainda</div>' : ''}
+      </div>
+      <div class="link-add-form">
+        <input id="lnk-t-${w.id}" placeholder="Título" style="flex:1;min-width:80px">
+        <input id="lnk-u-${w.id}" placeholder="https://..." style="flex:2;min-width:120px">
+        <button class="btn btn-primary btn-sm" id="lnk-add-${w.id}">+ Adicionar</button>
+      </div>`;
+
+    body.querySelectorAll('.link-remove').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.preventDefault(); e.stopPropagation();
+        const url = btn.dataset.url;
+        w.data.links = w.data.links.filter(l => l.url !== url);
+        updateData(w.id, {links: w.data.links});
+        render();
+      });
+    });
+
+    el(`lnk-add-${w.id}`).addEventListener('click', () => {
+      const title = el(`lnk-t-${w.id}`).value.trim();
+      const url   = el(`lnk-u-${w.id}`).value.trim();
+      if (!title) { toast('Informe um título', 'err'); return; }
+      if (!validURL(url)) { toast('URL inválida', 'err'); return; }
+      w.data.links.push({title, url});
+      updateData(w.id, {links: w.data.links});
+      render();
+    });
+
+    el(`lnk-u-${w.id}`).addEventListener('keydown', e => { if (e.key==='Enter') el(`lnk-add-${w.id}`).click(); });
+  }
+  render();
+}
+
+// ═══════════════════════════════════════════════════════
+// WIDGET: MARKET RADAR
+// ═══════════════════════════════════════════════════════
+// Symbol map (CoinGecko ID → ticker)
+const COIN_SYMBOLS = {
+  bitcoin:'BTC', ethereum:'ETH', solana:'SOL', cardano:'ADA',
+  polkadot:'DOT', chainlink:'LINK', 'avalanche-2':'AVAX',
+  'matic-network':'MATIC', ripple:'XRP', dogecoin:'DOGE',
+  litecoin:'LTC', uniswap:'UNI', aave:'AAVE', cosmos:'ATOM',
+  near:'NEAR', aptos:'APT', arbitrum:'ARB', optimism:'OP',
+  'shiba-inu':'SHIB', tron:'TRX', stellar:'XLM', monero:'XMR',
+  'the-sandbox':'SAND', decentraland:'MANA', 'internet-computer':'ICP',
+};
+
+let _marketWidgetRef = null; // track current market widget for modal
+
+function mountMarket(w, body) {
+  if (!w.data.assets) w.data.assets = ['bitcoin','ethereum','solana'];
+
+  // Add edit button to widget header
+  const head = body.closest('.widget').querySelector('.widget-controls');
+  if (head && !head.querySelector('.market-edit-btn')) {
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-ghost btn-icon market-edit-btn';
+    editBtn.title = 'Editar ativos';
+    editBtn.textContent = '✏️';
+    editBtn.addEventListener('click', () => openMarketModal(w));
+    head.insertBefore(editBtn, head.firstChild);
+  }
+
+  body.innerHTML = `<div id="mk-${w.id}"><div class="empty"><span class="spinner"></span>Carregando preços...</div></div>`;
+
+  async function fetchPrices() {
+    const c = el(`mk-${w.id}`);
+    if (!c) return;
+    try {
+      const ids = w.data.assets.join(',');
+      const r = await fetch(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
+        {signal: AbortSignal.timeout(10000)}
+      );
+      const d = await r.json();
+      c.innerHTML = `
+        <div class="market-list">
+          ${w.data.assets.map(id => {
+            const coin = d[id];
+            if (!coin) return `<div class="market-item"><span class="market-name">${esc(id)}</span><span style="color:var(--fg3);font-size:12px">Não encontrado</span></div>`;
+            const price = coin.usd;
+            const change = coin.usd_24h_change?.toFixed(2) ?? '0.00';
+            const up = parseFloat(change) >= 0;
+            const sym = COIN_SYMBOLS[id] || id.toUpperCase().slice(0,5);
+            return `<div class="market-item">
+              <span class="market-name">${esc(sym)}</span>
+              <span class="market-price">$${Number(price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:price>1?2:6})}</span>
+              <span class="market-change ${up?'up':'down'}">${up?'▲':'▼'} ${Math.abs(change)}%</span>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="market-refresh">Atualizado agora &nbsp;·&nbsp;
+          <button class="btn btn-ghost btn-sm" id="mkr-${w.id}">↻</button>
+          &nbsp;·&nbsp;
+          <a href="https://coinmarketcap.com" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:var(--fg3)">CoinMarketCap ↗</a>
+        </div>`;
+      el(`mkr-${w.id}`).addEventListener('click', fetchPrices);
+    } catch(e) {
+      const c2 = el(`mk-${w.id}`);
+      if (c2) c2.innerHTML = `<div class="empty">Erro ao carregar preços<br>
+        <button class="btn btn-sm" style="margin-top:8px" id="mkr2-${w.id}">↻ Tentar novamente</button></div>`;
+      el(`mkr2-${w.id}`)?.addEventListener('click', fetchPrices);
+    }
+  }
+
+  w._fetchPrices = fetchPrices; // expose for modal save
+  fetchPrices();
+  const iv = setInterval(fetchPrices, 60000);
+  body.closest('.widget').addEventListener('remove', () => clearInterval(iv));
+}
+
+function openMarketModal(w) {
+  _marketWidgetRef = w;
+  renderMarketEditList(w);
+  openModal('marketModal');
+}
+
+function renderMarketEditList(w) {
+  el('marketEditList').innerHTML = w.data.assets.map(id => {
+    const sym = COIN_SYMBOLS[id] || id.toUpperCase().slice(0,5);
+    return `<div class="market-edit-item">
+      <span>${esc(sym)} <small style="color:var(--fg3);font-weight:400">${esc(id)}</small></span>
+      <button class="btn btn-ghost btn-sm" data-del="${esc(id)}" style="color:var(--red)">✕</button>
+    </div>`;
+  }).join('') || '<div class="empty" style="padding:12px">Nenhum ativo adicionado</div>';
+
+  el('marketEditList').querySelectorAll('[data-del]').forEach(b => {
+    b.addEventListener('click', () => {
+      w.data.assets = w.data.assets.filter(a => a !== b.dataset.del);
+      updateData(w.id, {assets: w.data.assets});
+      renderMarketEditList(w);
+    });
+  });
+}
+
+// Market modal events
+el('marketModalClose').addEventListener('click', () => closeModal('marketModal'));
+el('marketModal').addEventListener('click', e => { if(e.target===el('marketModal')) closeModal('marketModal'); });
+
+el('marketAddBtn').addEventListener('click', () => {
+  const val = el('marketAddInput').value.trim().toLowerCase().replace(/\s+/g,'-');
+  if (!val) { toast('Informe o ID do token','err'); return; }
+  if (!_marketWidgetRef) return;
+  if (_marketWidgetRef.data.assets.includes(val)) { toast('Ativo já adicionado','err'); return; }
+  _marketWidgetRef.data.assets.push(val);
+  updateData(_marketWidgetRef.id, {assets: _marketWidgetRef.data.assets});
+  el('marketAddInput').value = '';
+  renderMarketEditList(_marketWidgetRef);
+});
+el('marketAddInput').addEventListener('keydown', e => { if(e.key==='Enter') el('marketAddBtn').click(); });
+
+el('marketSaveBtn').addEventListener('click', () => {
+  closeModal('marketModal');
+  if (_marketWidgetRef && _marketWidgetRef._fetchPrices) {
+    _marketWidgetRef._fetchPrices();
+    toast('Ativos atualizados!','ok');
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// WIDGET: NOTES
+// ═══════════════════════════════════════════════════════
+function mountNotes(w, body) {
+  const saved = w.data.content || '';
+  body.innerHTML = `
+    <textarea class="notes-area" id="na-${w.id}" placeholder="${t('notes_ph')}" aria-label="Notes">${esc(saved)}</textarea>
+    <div class="notes-saved" id="ns-${w.id}">${t('notes_saved')}</div>`;
+  const ta   = el(`na-${w.id}`);
+  const hint = el(`ns-${w.id}`);
+  const save = debounce(() => {
+    updateData(w.id, {content: ta.value});
+    hint.textContent = t('notes_saved');
+    hint.classList.add('show');
+    setTimeout(() => hint.classList.remove('show'), 1500);
+  }, 500);
+  ta.addEventListener('input', save);
+}
+
+// ═══════════════════════════════════════════════════════
+// WIDGET: ALPHA FEED
+// ═══════════════════════════════════════════════════════
+function mountFeed(w, body) {
+  if (!w.data.items) w.data.items = [];
+  let tab = 'pending';
+
+  function render() {
+    const items = w.data.items.filter(i => i.status === tab);
+    const pendingCount = w.data.items.filter(i => i.status==='pending').length;
+    const doneCount = w.data.items.filter(i => i.status==='completed').length;
+    body.innerHTML = `
+      <div class="feed-tabs">
+        <button class="feed-tab ${tab==='pending'?'active':''}" id="ft-p-${w.id}">${t('feed_pending')} <span class="feed-count">${pendingCount}</span></button>
+        <button class="feed-tab ${tab==='completed'?'active':''}" id="ft-d-${w.id}">${t('feed_done')} <span class="feed-count">${doneCount}</span></button>
+      </div>
+      <div class="feed-list">
+        ${items.length===0 ? `<div class="empty">${t('feed_nothing')}</div>` :
+          items.map(item => `
+          <div class="feed-item">
+            <div class="feed-item-info">
+              <div class="feed-item-title">${esc(item.title)}</div>
+              <div class="feed-item-url">${esc(item.url)}</div>
+            </div>
+            <div class="feed-item-actions">
+              <a class="btn btn-ghost btn-icon" href="${esc(item.url)}" target="_blank" rel="noopener noreferrer" title="Abrir">↗</a>
+              ${tab==='pending'
+                ? `<button class="btn btn-ghost btn-icon" data-done="${esc(item.id)}" title="Concluir">✓</button>`
+                : `<button class="btn btn-ghost btn-icon" data-undo="${esc(item.id)}" title="Reabrir">↩</button>`}
+              <button class="btn btn-ghost btn-icon" data-del="${esc(item.id)}" title="Excluir">🗑</button>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="feed-add-form" style="margin-top:10px">
+        <input id="fi-t-${w.id}" placeholder="${t('feed_title')}">
+        <input id="fi-u-${w.id}" placeholder="${t('feed_url')}">
+        <button class="btn btn-primary btn-sm" id="fi-add-${w.id}">+ ${t('feed_save')||'Save'}</button>
+      </div>`;
+
+    el(`ft-p-${w.id}`).addEventListener('click', () => { tab='pending';  render(); });
+    el(`ft-d-${w.id}`).addEventListener('click', () => { tab='completed'; render(); });
+
+    body.querySelectorAll('[data-done]').forEach(b => b.addEventListener('click', () => {
+      const it = w.data.items.find(i=>i.id===b.dataset.done);
+      if (it) { it.status='completed'; updateData(w.id,{items:w.data.items}); render(); }
+    }));
+    body.querySelectorAll('[data-undo]').forEach(b => b.addEventListener('click', () => {
+      const it = w.data.items.find(i=>i.id===b.dataset.undo);
+      if (it) { it.status='pending'; updateData(w.id,{items:w.data.items}); render(); }
+    }));
+    body.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => {
+      w.data.items = w.data.items.filter(i=>i.id!==b.dataset.del);
+      updateData(w.id,{items:w.data.items}); render();
+    }));
+
+    el(`fi-add-${w.id}`).addEventListener('click', () => {
+      const title = el(`fi-t-${w.id}`).value.trim();
+      const url   = el(`fi-u-${w.id}`).value.trim();
+      if (!title) { toast('Informe um título','err'); return; }
+      if (!validURL(url)) { toast('URL inválida','err'); return; }
+      w.data.items.push({id: uid(), title, url, status:'pending'});
+      updateData(w.id,{items:w.data.items});
+      render();
+    });
+    el(`fi-u-${w.id}`).addEventListener('keydown', e => { if(e.key==='Enter') el(`fi-add-${w.id}`).click(); });
+  }
+  render();
+}
+
+// ═══════════════════════════════════════════════════════
+// WIDGET: AI PROMPT
+// ═══════════════════════════════════════════════════════
+function mountAI(w, body) {
+  let showConfig = false;
+  function render() {
+    body.innerHTML = `
+      <textarea class="ai-prompt-area" id="ai-p-${w.id}" placeholder="${t('ai_ph')}">${esc(w.data.prompt||'')}</textarea>
+      <div class="ai-actions">
+        <button class="btn btn-primary btn-sm" id="ai-run-${w.id}">${t('ai_run')}</button>
+        <button class="btn btn-ghost btn-sm" id="ai-cfg-${w.id}">${t('ai_cfg')}</button>
+        ${w.data.provider ? `<span style="font-size:11px;color:var(--fg3)">${esc(w.data.provider)}</span>` : ''}
+      </div>
+      <div id="ai-cfg-panel-${w.id}" style="display:${showConfig?'block':'none'}">
+        <div class="ai-config">
+          <select id="ai-prov-${w.id}">
+            <option value="openai" ${w.data.provider==='openai'?'selected':''}>OpenAI (GPT)</option>
+            <option value="claude" ${w.data.provider==='claude'?'selected':''}>Anthropic (Claude)</option>
+          </select>
+          <input type="password" id="ai-key-${w.id}" placeholder="API Key" value="${esc(w.data.apiKey||'')}">
+          <button class="btn btn-primary btn-sm" id="ai-save-${w.id}">${t('ai_save_cfg')}</button>
+          <div class="ai-warning">${t('ai_warning')}</div>
+        </div>
+      </div>
+      <div id="ai-resp-${w.id}"></div>`;
+
+    el(`ai-cfg-${w.id}`).addEventListener('click', () => { showConfig=!showConfig; render(); });
+    el(`ai-save-${w.id}`).addEventListener('click', () => {
+      updateData(w.id, {
+        provider: el(`ai-prov-${w.id}`).value,
+        apiKey: el(`ai-key-${w.id}`).value.trim(),
+      });
+      showConfig = false;
+      render();
+      toast('Config salvo', 'ok');
+    });
+    el(`ai-run-${w.id}`).addEventListener('click', () => runAI(w));
+  }
+  render();
+}
+
+async function runAI(w) {
+  const prompt = el(`ai-p-${w.id}`)?.value?.trim();
+  const resp   = el(`ai-resp-${w.id}`);
+  if (!prompt) { toast('Digite um prompt','err'); return; }
+  if (!w.data.apiKey) { toast('Configure sua API key em ⚙ Config','err'); return; }
+  updateData(w.id, {prompt});
+  resp.innerHTML = `<div class="ai-response"><span class="spinner"></span>Processando...</div>`;
+  try {
+    let text = '';
+    if (w.data.provider === 'openai') {
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+w.data.apiKey},
+        body: JSON.stringify({model:'gpt-3.5-turbo',messages:[{role:'user',content:prompt}],max_tokens:600}),
+      });
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message);
+      text = d.choices[0].message.content;
+    } else {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':w.data.apiKey,'anthropic-version':'2023-06-01'},
+        body: JSON.stringify({model:'claude-3-haiku-20240307',max_tokens:600,messages:[{role:'user',content:prompt}]}),
+      });
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
+      text = d.content[0].text;
+    }
+    resp.innerHTML = `<div class="ai-response">${esc(text)}</div>`;
+  } catch(e) {
+    resp.innerHTML = `<div class="ai-response" style="color:var(--red)">Erro: ${esc(e.message)}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// WIDGET: EMBED
+// ═══════════════════════════════════════════════════════
+function mountEmbed(w, body) {
+  body.innerHTML = `
+    <div class="embed-form">
+      <input id="em-u-${w.id}" type="url" placeholder="https://..." value="${esc(w.data.url||'')}">
+      <button class="btn btn-primary btn-sm" id="em-go-${w.id}">Carregar</button>
+    </div>
+    <div class="embed-warning">${t('embed_warning')}</div>
+    <div id="em-c-${w.id}">
+      ${w.data.url ? `<iframe class="embed-frame" src="${esc(w.data.url)}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy" title="Embed"></iframe>` : ''}
+    </div>`;
+  el(`em-go-${w.id}`).addEventListener('click', () => {
+    const url = el(`em-u-${w.id}`).value.trim();
+    if (!validURL(url)) { toast('URL inválida','err'); return; }
+    updateData(w.id, {url});
+    el(`em-c-${w.id}`).innerHTML = `<iframe class="embed-frame" src="${esc(url)}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy" title="Embed"></iframe>`;
+  });
+  el(`em-u-${w.id}`).addEventListener('keydown', e => { if(e.key==='Enter') el(`em-go-${w.id}`).click(); });
+}
+
+// ═══════════════════════════════════════════════════════
+// WIDGET: TO-DO LIST
+// ═══════════════════════════════════════════════════════
+function mountTodo(w, body) {
+  if (!w.data.todos) w.data.todos = [];
+
+  const PRIS = {high:'🔴', med:'🟡', low:'🟢'};
+
+  function render() {
+    const pending = w.data.todos.filter(t => !t.done).length;
+    body.innerHTML = `
+      <div class="todo-list" id="tl-${w.id}">
+        ${w.data.todos.length === 0
+          ? `<div class="empty">📋 ${S.lang==='en'?'No tasks yet':S.lang==='es'?'Sin tareas aún':'Nenhuma tarefa ainda'}</div>`
+          : w.data.todos.map(td => `
+          <div class="todo-item${td.done?' done':''}" data-tid="${esc(td.id)}">
+            <input type="checkbox" class="todo-check" ${td.done?'checked':''} data-chk="${esc(td.id)}">
+            <span class="todo-text">${esc(td.text)}</span>
+            <span class="todo-pri ${td.pri}" title="${td.pri}">${PRIS[td.pri]||''}</span>
+            <button class="todo-del" data-del="${esc(td.id)}" title="${S.lang==='en'?'Delete':'Excluir'}">✕</button>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--fg3);margin-bottom:8px">
+        ${pending} ${S.lang==='en'?'pending':S.lang==='es'?'pendiente(s)':'pendente(s)'}
+      </div>
+      <div class="todo-add-form">
+        <input id="td-t-${w.id}" placeholder="${S.lang==='en'?'New task...':S.lang==='es'?'Nueva tarea...':'Nova tarefa...'}" style="flex:2">
+        <select id="td-p-${w.id}">
+          <option value="high">🔴 ${S.lang==='en'?'High':S.lang==='es'?'Alta':'Alta'}</option>
+          <option value="med" selected>🟡 ${S.lang==='en'?'Med':S.lang==='es'?'Med':'Med'}</option>
+          <option value="low">🟢 ${S.lang==='en'?'Low':S.lang==='es'?'Baja':'Baixa'}</option>
+        </select>
+        <button class="btn btn-primary btn-sm" id="td-add-${w.id}">+</button>
+      </div>`;
+
+    body.querySelectorAll('[data-chk]').forEach(chk => {
+      chk.addEventListener('change', () => {
+        const td = w.data.todos.find(t => t.id === chk.dataset.chk);
+        if (td) { td.done = chk.checked; updateData(w.id, {todos: w.data.todos}); render(); }
+      });
+    });
+    body.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        w.data.todos = w.data.todos.filter(t => t.id !== btn.dataset.del);
+        updateData(w.id, {todos: w.data.todos}); render();
+      });
+    });
+    const inp = el(`td-t-${w.id}`);
+    el(`td-add-${w.id}`).addEventListener('click', () => {
+      const text = inp.value.trim();
+      if (!text) return;
+      const pri = el(`td-p-${w.id}`).value;
+      w.data.todos.push({id: uid(), text, pri, done: false});
+      updateData(w.id, {todos: w.data.todos}); render();
+    });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') el(`td-add-${w.id}`).click(); });
+  }
+  render();
+}
+
+// ═══════════════════════════════════════════════════════
+// WIDGET: POMODORO TIMER
+// ═══════════════════════════════════════════════════════
+function mountPomodoro(w, body) {
+  const MODES_POMO = {
+    work:  {label: S.lang==='en'?'Focus':S.lang==='es'?'Enfoque':'Foco',      secs: 25*60, color:'var(--accent)'},
+    short: {label: S.lang==='en'?'Short Break':S.lang==='es'?'Descanso':'Pausa Curta', secs: 5*60,  color:'var(--green)'},
+    long:  {label: S.lang==='en'?'Long Break':S.lang==='es'?'Descanso Largo':'Pausa Longa',  secs: 15*60, color:'var(--yellow)'},
+  };
+
+  let mode    = 'work';
+  let secsLeft = MODES_POMO[mode].secs;
+  let running  = false;
+  let ivRef    = null;
+  let sessions = w.data.pomoSessions || 0;
+
+  const CIRC  = 2 * Math.PI * 44; // r=44
+
+  function fmt(s) {
+    const m = Math.floor(s / 60).toString().padStart(2, '0');
+    const sec = (s % 60).toString().padStart(2, '0');
+    return `${m}:${sec}`;
+  }
+
+  function render() {
+    const pct  = secsLeft / MODES_POMO[mode].secs;
+    const dash = (pct * CIRC).toFixed(1);
+    const mInfo = MODES_POMO[mode];
+    body.innerHTML = `
+      <div class="pomo-display">
+        <div class="pomo-ring">
+          <svg width="100" height="100" viewBox="0 0 100 100">
+            <circle class="pomo-ring-bg" cx="50" cy="50" r="44"/>
+            <circle class="pomo-ring-progress" cx="50" cy="50" r="44"
+              stroke="${mInfo.color}"
+              stroke-dasharray="${CIRC}"
+              stroke-dashoffset="${(CIRC - dash).toFixed(1)}"/>
+          </svg>
+          <div class="pomo-ring-time">
+            <div class="pomo-timer">${fmt(secsLeft)}</div>
+          </div>
+        </div>
+        <div class="pomo-label" style="color:${mInfo.color}">${mInfo.label}</div>
+      </div>
+      <div class="pomo-controls">
+        <button class="btn btn-sm" id="pm-mode-work-${w.id}" style="${mode==='work'?'background:var(--accent);color:#fff;border-color:var(--accent)':''}">
+          ${S.lang==='en'?'Focus':S.lang==='es'?'Enfoque':'Foco'} 25m
+        </button>
+        <button class="btn btn-sm" id="pm-mode-short-${w.id}" style="${mode==='short'?'background:var(--green);color:#fff;border-color:var(--green)':''}">
+          ${S.lang==='en'?'Break':S.lang==='es'?'Descanso':'Pausa'} 5m
+        </button>
+        <button class="btn btn-sm" id="pm-mode-long-${w.id}" style="${mode==='long'?'background:var(--yellow);color:#fff;border-color:var(--yellow)':''}">
+          ${S.lang==='en'?'Long':S.lang==='es'?'Largo':'Longa'} 15m
+        </button>
+      </div>
+      <div class="pomo-controls" style="margin-top:8px">
+        <button class="btn btn-primary" id="pm-toggle-${w.id}">${running?(S.lang==='en'?'⏸ Pause':S.lang==='es'?'⏸ Pausa':'⏸ Pausar'):(S.lang==='en'?'▶ Start':S.lang==='es'?'▶ Iniciar':'▶ Iniciar')}</button>
+        <button class="btn btn-ghost" id="pm-reset-${w.id}">↺ ${S.lang==='en'?'Reset':S.lang==='es'?'Reiniciar':'Reiniciar'}</button>
+      </div>
+      <div class="pomo-stats">
+        <span>${S.lang==='en'?'Sessions':S.lang==='es'?'Sesiones':'Sessões'}: <span>${sessions}</span></span>
+        <span>${S.lang==='en'?'Daily':S.lang==='es'?'Hoy':'Hoje'}: <span>${Math.round(sessions * 25)} min</span></span>
+      </div>`;
+
+    // Mode switches
+    ['work','short','long'].forEach(m => {
+      const btn = el(`pm-mode-${m}-${w.id}`);
+      if (btn) btn.addEventListener('click', () => {
+        clearInterval(ivRef); running = false;
+        mode = m; secsLeft = MODES_POMO[mode].secs;
+        render();
+      });
+    });
+
+    el(`pm-toggle-${w.id}`).addEventListener('click', () => {
+      if (running) {
+        clearInterval(ivRef); running = false; render();
+      } else {
+        running = true;
+        ivRef = setInterval(() => {
+          secsLeft--;
+          if (secsLeft <= 0) {
+            clearInterval(ivRef); running = false;
+            if (mode === 'work') { sessions++; updateData(w.id, {pomoSessions: sessions}); }
+            // Notification
+            if (Notification.permission === 'granted') {
+              new Notification('Taskium ⏱', {body: mode === 'work' ? (S.lang==='en'?'Focus session done! Take a break.':'Sessão concluída! Descanse.') : (S.lang==='en'?'Break over! Time to focus.':'Pausa encerrada! Hora de focar.')});
+            }
+            toast(mode === 'work' ? '🍅 Done!' : '💪 Go!', 'ok');
+            secsLeft = MODES_POMO[mode].secs;
+          }
+          render();
+        }, 1000);
+        render();
+      }
+    });
+
+    el(`pm-reset-${w.id}`).addEventListener('click', () => {
+      clearInterval(ivRef); running = false;
+      secsLeft = MODES_POMO[mode].secs; render();
+    });
+  }
+
+  // Request notification permission
+  if (Notification && Notification.permission === 'default') Notification.requestPermission();
+
+  render();
+  body.closest('.widget').addEventListener('remove', () => clearInterval(ivRef));
+}
+
+// ═══════════════════════════════════════════════════════
+// WIDGET: DAILY QUOTE
+// ═══════════════════════════════════════════════════════
+const QUOTES = [
+  {text: 'The best time to plant a tree was 20 years ago. The second best time is now.', author: 'Chinese Proverb'},
+  {text: 'An investment in knowledge pays the best interest.', author: 'Benjamin Franklin'},
+  {text: 'The only way to do great work is to love what you do.', author: 'Steve Jobs'},
+  {text: 'In the middle of difficulty lies opportunity.', author: 'Albert Einstein'},
+  {text: 'It does not matter how slowly you go as long as you do not stop.', author: 'Confucius'},
+  {text: 'The future belongs to those who believe in the beauty of their dreams.', author: 'Eleanor Roosevelt'},
+  {text: 'Success is not final, failure is not fatal: it is the courage to continue that counts.', author: 'Winston Churchill'},
+  {text: 'You miss 100% of the shots you don\'t take.', author: 'Wayne Gretzky'},
+  {text: 'I have not failed. I\'ve just found 10,000 ways that won\'t work.', author: 'Thomas Edison'},
+  {text: 'The secret of getting ahead is getting started.', author: 'Mark Twain'},
+  {text: 'Build something 100 people love, not something 1 million people kind of like.', author: 'Brian Chesky'},
+  {text: 'Move fast and learn things.', author: 'Anonymous'},
+  {text: 'Code is like humor. When you have to explain it, it\'s bad.', author: 'Cory House'},
+  {text: 'First, solve the problem. Then, write the code.', author: 'John Johnson'},
+  {text: 'Simplicity is the soul of efficiency.', author: 'Austin Freeman'},
+];
+
+function mountQuote(w, body) {
+  let qIdx = w.data.quoteIdx ?? Math.floor(Math.random() * QUOTES.length);
+
+  function render() {
+    const q = QUOTES[qIdx % QUOTES.length];
+    body.innerHTML = `
+      <div class="quote-body">
+        <div class="quote-text">"${esc(q.text)}"</div>
+        <div class="quote-author">— ${esc(q.author)}</div>
+      </div>
+      <div class="quote-refresh" style="text-align:center">
+        <button class="btn btn-ghost btn-sm" id="qr-${w.id}">↻ ${S.lang==='en'?'New quote':S.lang==='es'?'Nueva cita':'Nova frase'}</button>
+      </div>`;
+    el(`qr-${w.id}`).addEventListener('click', () => {
+      qIdx = (qIdx + 1) % QUOTES.length;
+      updateData(w.id, {quoteIdx: qIdx});
+      render();
+    });
+  }
+  render();
+}
+
+// ═══════════════════════════════════════════════════════
+// ADD WIDGET MODAL
+// ═══════════════════════════════════════════════════════
+function buildWidgetPicker() {
+  el('widgetPicker').innerHTML = Object.entries(WIDGET_DEF).map(([type, def]) => `
+    <button class="modal-widget-btn" data-type="${type}">
+      <span class="wi">${def.icon}</span>${def.label}
+    </button>
+  `).join('');
+  el('widgetPicker').querySelectorAll('[data-type]').forEach(b => {
+    b.addEventListener('click', () => {
+      addWidget(b.dataset.type);
+      closeModal('addModal');
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// AUTH MODAL
+// ═══════════════════════════════════════════════════════
+function renderUserBadge() {
+  const badge = el('userBadge');
+  const btn   = el('authBtn');
+  if (S.user) {
+    badge.textContent = S.user.email;
+    btn.textContent = '🚪';
+    btn.title = 'Sair';
+    btn.onclick = () => { if(confirm('Sair da conta?')) supaSignOut(); };
+  } else {
+    badge.textContent = '';
+    btn.textContent = '🔒';
+    btn.title = 'Entrar';
+    btn.onclick = () => openModal('authModal');
+  }
+}
+
+el('authSwitch').addEventListener('click', () => {
+  S.isLogin = !S.isLogin;
+  el('authTitle').textContent   = S.isLogin ? 'Entrar' : 'Criar conta';
+  el('authSubmit').textContent  = S.isLogin ? 'Entrar' : 'Cadastrar';
+  el('authSwitch').textContent  = S.isLogin ? 'Criar conta' : 'Já tenho conta';
+});
+
+el('authForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = el('authEmail').value.trim();
+  const pw    = el('authPass').value;
+  const btn   = el('authSubmit');
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    if (S.isLogin) {
+      await supaSignIn(email, pw);
+      toast('Bem-vindo!', 'ok');
+    } else {
+      await supaSignUp(email, pw);
+      toast('Conta criada! Verifique seu email.', 'ok');
+    }
+    closeModal('authModal');
+    el('authForm').reset();
+  } catch(err) {
+    toast(err.message || 'Erro de autenticação', 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = S.isLogin ? 'Entrar' : 'Cadastrar';
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// SEARCH / COMMAND BAR
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+    e.preventDefault();
+    el('searchInput').focus();
+    el('searchInput').select();
+  }
+  if (e.key === 'Escape') {
+    el('searchInput').blur();
+    ['authModal','addModal','themeModal'].forEach(closeModal);
+  }
+});
+
+el('searchInput').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const raw = e.target.value.trim();
+  e.target.value = '';
+  if (!raw.startsWith('/')) return;
+  const parts = raw.slice(1).split(' ');
+  const cmd = parts[0].toLowerCase();
+  const arg = parts[1]?.toLowerCase();
+
+  if (cmd === 'mode' && arg && MODES[arg]) { switchMode(arg); toast(`Modo: ${MODES[arg].label}`,'info'); }
+  else if (cmd === 'theme' && arg) { applyTheme(arg); toast(`Tema: ${arg}`,'info'); }
+  else if (cmd === 'add' && arg) { addWidget(arg); }
+  else if (cmd === 'save') { saveAll(); }
+  else if (cmd === 'login') { openModal('authModal'); }
+  else if (cmd === 'logout') { supaSignOut(); }
+  else if (cmd === 'clear') { if(confirm('Limpar todos os widgets?')) { S.widgets=[]; renderAll(); persistState(); } }
+  else { toast(`Comando não reconhecido: /${cmd}`,'err'); }
+});
+
+// ═══════════════════════════════════════════════════════
+// CLOSE BUTTONS
+// ═══════════════════════════════════════════════════════
+el('authClose').addEventListener('click',  () => closeModal('authModal'));
+el('addClose').addEventListener('click',   () => closeModal('addModal'));
+el('themeClose').addEventListener('click', () => closeModal('themeModal'));
+
+// Close modal on backdrop click
+['authModal','addModal','themeModal'].forEach(id => {
+  el(id).addEventListener('click', e => { if (e.target === el(id)) closeModal(id); });
+});
+
+// ═══════════════════════════════════════════════════════
+// HEADER BUTTONS
+// ═══════════════════════════════════════════════════════
+el('themeBtn').addEventListener('click', () => { buildThemePicker(); openModal('themeModal'); });
+el('addBtn').addEventListener('click',   () => { buildWidgetPicker(); openModal('addModal'); });
+el('saveBtn').addEventListener('click',  saveAll);
+el('authBtn').onclick = () => openModal('authModal');
+
+// ═══════════════════════════════════════════════════════
+// FOCUS MODE — dim everything except clock + todo
+// ═══════════════════════════════════════════════════════
+let _focusActive = false;
+function toggleFocusMode() {
+  _focusActive = !_focusActive;
+  document.body.classList.toggle('focus-mode', _focusActive);
+  const btn = el('focusBtn');
+  if (btn) btn.setAttribute('aria-pressed', _focusActive);
+
+  if (_focusActive) {
+    // Mark which widgets should stay visible (clock + todo)
+    canvas().querySelectorAll('.widget[data-wid]').forEach(node => {
+      const wid  = node.dataset.wid;
+      const wObj = S.widgets.find(w => w.id === wid);
+      const keep = wObj && (wObj.type === 'clock' || wObj.type === 'todo');
+      node.classList.toggle('focus-keep', keep);
+    });
+    toast('🎯 Modo Foco ativado', 'info');
+  } else {
+    canvas().querySelectorAll('.widget').forEach(n => n.classList.remove('focus-keep'));
+    toast('Modo Foco desativado', 'ok');
+  }
+}
+el('focusBtn').addEventListener('click', toggleFocusMode);
+
+// Exit focus mode on Escape key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && _focusActive) toggleFocusMode();
+});
+
+// ═══════════════════════════════════════════════════════
+// LANGUAGE / i18n
+// ═══════════════════════════════════════════════════════
+const LANGS = {
+  pt: {
+    code:'pt', flag:'🇧🇷', label:'PT',
+    search:'Pesquisar ou / para comandos',
+    save:'Salvar layout', add:'Adicionar widget', theme:'Mudar tema',
+    login:'Entrar', logout:'Sair', visits:'Visitas',
+    confirm_remove:'Remover widget',
+    confirm_clear:'Limpar todos os widgets?',
+    saved:'Layout salvo!',
+    added:'adicionado',
+    mode_generic:'Generic', mode_trading:'Trading', mode_content:'Content', mode_builder:'Builder',
+    weather_city:'Cidade', weather_temp:'Temperatura', weather_cond:'Condição', weather_hum:'Umidade',
+    notes_ph:'Escreva suas notas aqui...',
+    notes_saved:'✓ Salvo',
+    feed_pending:'Pendente', feed_done:'Concluído', feed_nothing:'Nada aqui ainda',
+    feed_title:'Título do link', feed_url:'https://...',
+    ai_ph:'Digite seu prompt...', ai_run:'▶ Executar', ai_cfg:'⚙ Config',
+    ai_save_cfg:'Salvar config', ai_warning:'⚠ A API key é armazenada apenas no seu navegador.',
+    embed_warning:'⚠ Alguns sites bloqueiam incorporação por segurança.',
+    link_title:'Título', link_url:'https://',
+    market_ref:'atualizado agora', market_edit:'Editar ativos',
+    feed_save:'Salvar',
+    error_url:'URL inválida', error_title:'Informe um título',
+    enter:'Entrar', register:'Criar conta', have_acct:'Já tenho conta',
+    email:'Email', password:'Senha', bye:'Até logo!',
+    signup_ok:'Conta criada! Verifique seu email.',
+  },
+  en: {
+    code:'en', flag:'🇺🇸', label:'EN',
+    search:'Search or press / for commands',
+    save:'Save layout', add:'Add widget', theme:'Change theme',
+    login:'Login', logout:'Logout', visits:'Visits',
+    confirm_remove:'Remove widget',
+    confirm_clear:'Clear all widgets?',
+    saved:'Layout saved!',
+    added:'added',
+    mode_generic:'Generic', mode_trading:'Trading', mode_content:'Content', mode_builder:'Builder',
+    weather_city:'City', weather_temp:'Temperature', weather_cond:'Condition', weather_hum:'Humidity',
+    notes_ph:'Write your notes here...',
+    notes_saved:'✓ Saved',
+    feed_pending:'Pending', feed_done:'Done', feed_nothing:'Nothing here yet',
+    feed_title:'Link title', feed_url:'https://...',
+    ai_ph:'Type your prompt...', ai_run:'▶ Run', ai_cfg:'⚙ Config',
+    ai_save_cfg:'Save config', ai_warning:'⚠ API key is stored in your browser only.',
+    embed_warning:'⚠ Some sites block embedding for security.',
+    link_title:'Title', link_url:'https://',
+    market_ref:'updated now', market_edit:'Edit assets',
+    feed_save:'Save',
+    error_url:'Invalid URL', error_title:'Please enter a title',
+    enter:'Login', register:'Register', have_acct:'Already have an account',
+    email:'Email', password:'Password', bye:'Goodbye!',
+    signup_ok:'Account created! Check your email.',
+  },
+  es: {
+    code:'es', flag:'🇪🇸', label:'ES',
+    search:'Buscar o / para comandos',
+    save:'Guardar diseño', add:'Agregar widget', theme:'Cambiar tema',
+    login:'Entrar', logout:'Salir', visits:'Visitas',
+    confirm_remove:'Eliminar widget',
+    confirm_clear:'¿Limpiar todos los widgets?',
+    saved:'¡Diseño guardado!',
+    added:'agregado',
+    mode_generic:'Genérico', mode_trading:'Trading', mode_content:'Contenido', mode_builder:'Constructor',
+    weather_city:'Ciudad', weather_temp:'Temperatura', weather_cond:'Condición', weather_hum:'Humedad',
+    notes_ph:'Escribe tus notas aquí...',
+    notes_saved:'✓ Guardado',
+    feed_pending:'Pendiente', feed_done:'Hecho', feed_nothing:'Nada aquí aún',
+    feed_title:'Título', feed_url:'https://...',
+    ai_ph:'Escribe tu prompt...', ai_run:'▶ Ejecutar', ai_cfg:'⚙ Config',
+    ai_save_cfg:'Guardar config', ai_warning:'⚠ La API key se guarda solo en tu navegador.',
+    embed_warning:'⚠ Algunos sitios bloquean la incorporación.',
+    link_title:'Título', link_url:'https://',
+    market_ref:'actualizado ahora', market_edit:'Editar activos',
+    feed_save:'Guardar',
+    error_url:'URL inválida', error_title:'Por favor ingresa un título',
+    enter:'Entrar', register:'Registrarse', have_acct:'Ya tengo cuenta',
+    email:'Email', password:'Contraseña', bye:'¡Hasta luego!',
+    signup_ok:'¡Cuenta creada! Revisa tu email.',
+  },
+};
+
+const LANG_CYCLE = ['pt','en','es'];
+
+function detectLang() {
+  const saved = ls_get('lang', null);
+  if (saved && LANGS[saved]) return saved;
+  const nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+  if (nav.startsWith('pt')) return 'pt';
+  if (nav.startsWith('es')) return 'es';
+  return 'en';
+}
+
+function t(key) { return (LANGS[S.lang] || LANGS.en)[key] || key; }
+
+function applyLang(code, save=true) {
+  if (!LANGS[code]) return;
+  S.lang = code;
+  document.documentElement.lang = code;
+  if (save) ls_set('lang', code);
+
+  // Update static UI text
+  const si = el('searchInput');
+  if (si) si.placeholder = t('search');
+  const sb = el('saveBtn');
+  if (sb) sb.title = t('save');
+  const ab = el('addBtn');
+  if (ab) ab.title = t('add');
+  const tb = el('themeBtn');
+  if (tb) tb.title = t('theme');
+  const lb = el('langBtn');
+  if (lb) lb.textContent = LANGS[code].flag + ' ' + LANGS[code].label;
+  const vl = el('visitLabel');
+  if (vl) vl.textContent = t('visits');
+
+  // Re-render mode bar labels
+  buildModeBar();
+
+  // Re-mount widget contents so translated strings update
+  (canvas()||el('main')).querySelectorAll('.widget[data-wid]').forEach(node => {
+    const wid  = node.dataset.wid;
+    const wObj = S.widgets.find(w => w.id === wid);
+    if (!wObj) return;
+    const body = node.querySelector('.widget-body');
+    if (body) {
+      body.innerHTML = '';
+      mountWidgetContent(wObj, body);
+    }
+  });
+}
+
+function cycleLang() {
+  const idx = LANG_CYCLE.indexOf(S.lang || 'en');
+  const next = LANG_CYCLE[(idx + 1) % LANG_CYCLE.length];
+  applyLang(next);
+  toast(`${LANGS[next].flag} ${LANGS[next].label}`, 'info');
+}
+
+el('langBtn').addEventListener('click', cycleLang);
+
+// ═══════════════════════════════════════════════════════
+// VISIT COUNTER (local)
+// ═══════════════════════════════════════════════════════
+function bumpVisit() {
+  const cnt = (ls_get('visits', 0) || 0) + 1;
+  ls_set('visits', cnt);
+  el('visitCount').textContent = cnt;
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+function init() {
+  // Restore theme
+  const savedTheme = ls_get('theme', 'dark');
+  applyTheme(savedTheme, false);
+
+  // Restore / detect language
+  applyLang(detectLang(), false);
+
+  // Restore mode + widgets
+  const savedMode = ls_get('mode', 'generic');
+  S.mode = savedMode;
+  const savedWidgets = ls_get(`layout_${savedMode}`, null);
+  if (savedWidgets && Array.isArray(savedWidgets) && savedWidgets.length > 0) {
+    S.widgets = savedWidgets;
+  } else {
+    S.widgets = MODES[savedMode].widgets.map(type => ({id: uid(), type, collapsed: false, data: {}}));
+  }
+
+  buildModeBar();
+  renderAll();
+  bumpVisit();
+  initSupa();
+  renderUserBadge();
+
+  // Auto-save every 30s
+  setInterval(() => { persistState(); }, 30000);
+
+  // Re-render on viewport resize / orientation change
+  // Debounced so we don't thrash during resize dragging
+  let _resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(() => {
+      // Re-apply positions for all existing widget nodes
+      const c = canvas();
+      if (!c) return;
+      S.widgets.forEach(w => {
+        const node = c.querySelector(`.widget[data-wid="${w.id}"]`);
+        if (node) applyPos(node, w);
+      });
+      fitCanvas();
+    }, 150);
+  });
+}
+
+// Fire init after DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
