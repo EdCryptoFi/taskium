@@ -1141,6 +1141,25 @@ function buildModeBar() {
   });
 }
 
+// Toollinks widget type for each mode (if any)
+const MODE_TOOLLINKS = {
+  trading: 'toollinks_trading',
+  builder: 'toollinks_builder',
+  content: 'toollinks_content',
+};
+
+// Ensure the mode-specific toollinks widget exists in the widget list.
+// If missing (e.g. user deleted it or it's an old saved layout), inject it.
+function ensureModeWidgets(modeId, widgets) {
+  const tlType = MODE_TOOLLINKS[modeId];
+  if (!tlType) return widgets;
+  const has = widgets.some(w => w.type === tlType);
+  if (!has) {
+    widgets = [...widgets, {id: uid(), type: tlType, collapsed: false, data: {}}];
+  }
+  return widgets;
+}
+
 function switchMode(id, save=true) {
   if (!MODES[id]) return;
   // save current mode first
@@ -1150,7 +1169,7 @@ function switchMode(id, save=true) {
   // load saved layout for this mode, or use defaults
   const saved = ls_get(`layout_${id}`, null);
   if (saved && Array.isArray(saved) && saved.length) {
-    S.widgets = saved;
+    S.widgets = ensureModeWidgets(id, saved);
   } else {
     S.widgets = MODES[id].widgets.map(type => ({id: uid(), type, collapsed: false, data: {}}));
   }
@@ -2302,7 +2321,14 @@ function mountQuote(w, body) {
 // ADD WIDGET MODAL
 // ═══════════════════════════════════════════════════════
 function buildWidgetPicker() {
-  el('widgetPicker').innerHTML = Object.entries(WIDGET_DEF).map(([type, def]) => `
+  // Show all widgets except toollinks that don't belong to current mode
+  const currentTl = MODE_TOOLLINKS[S.mode]; // e.g. 'toollinks_trading'
+  const entries = Object.entries(WIDGET_DEF).filter(([type]) => {
+    if (!type.startsWith('toollinks_')) return true;   // normal widgets always shown
+    return type === currentTl;                          // only show this mode's toollinks
+  });
+
+  el('widgetPicker').innerHTML = entries.map(([type, def]) => `
     <button class="modal-widget-btn" data-type="${type}">
       <span class="wi">${def.icon}</span>${def.label}
     </button>
@@ -2747,7 +2773,7 @@ function init() {
   S.mode = savedMode;
   const savedWidgets = ls_get(`layout_${savedMode}`, null);
   if (savedWidgets && Array.isArray(savedWidgets) && savedWidgets.length > 0) {
-    S.widgets = savedWidgets;
+    S.widgets = ensureModeWidgets(savedMode, savedWidgets);
   } else {
     S.widgets = MODES[savedMode].widgets.map(type => ({id: uid(), type, collapsed: false, data: {}}));
   }
