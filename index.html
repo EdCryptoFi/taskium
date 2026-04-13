@@ -280,8 +280,17 @@ input,textarea,select{font-family:inherit;font-size:13px;outline:none}
 }
 .tool-card{
   background:var(--bg2);border:1px solid var(--border);
-  border-radius:var(--r3);box-shadow:var(--shadow);overflow:hidden;
-  width:100%;
+  border-radius:var(--r3);box-shadow:var(--shadow);
+  width:100%;position:relative;
+}
+/* Resizable body — user drags the resize grip at bottom-right */
+.tool-card-body{
+  padding:12px 16px;
+  overflow:hidden;
+  resize:both;
+  min-height:60px;
+  min-width:200px;
+  box-sizing:border-box;
 }
 .tool-card-head{
   display:flex;align-items:center;gap:8px;
@@ -289,7 +298,6 @@ input,textarea,select{font-family:inherit;font-size:13px;outline:none}
   background:var(--bg3);font-size:13px;font-weight:600;
 }
 .tool-card-head span{font-size:16px}
-.tool-card-body{padding:12px 16px}
 /* Links in a horizontal wrap row instead of column */
 .tool-links{
   display:flex;flex-wrap:wrap;gap:8px;
@@ -591,6 +599,37 @@ body.focus-mode #focus-banner{display:block}
 /* ===== COMMAND BAR HINT ===== */
 .cmd-hint{font-size:11px;color:var(--fg3);padding:0 0 0 4px}
 
+/* ===== SEARCH DROPDOWN ===== */
+#searchDropdown{
+  display:none;
+  position:absolute;
+  top:calc(100% + 4px);
+  left:0;right:0;
+  background:var(--bg2);
+  border:1px solid var(--border2);
+  border-radius:var(--r2);
+  box-shadow:var(--shadow);
+  z-index:500;
+  max-height:320px;
+  overflow-y:auto;
+}
+#searchDropdown.open{display:block}
+.sdrop-section{padding:6px 0;border-bottom:1px solid var(--border)}
+.sdrop-section:last-child{border-bottom:none}
+.sdrop-label{font-size:10px;font-weight:700;color:var(--fg3);
+  text-transform:uppercase;letter-spacing:.8px;padding:4px 12px}
+.sdrop-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 12px;cursor:pointer;font-size:13px;
+  transition:background .1s;
+}
+.sdrop-item:hover,.sdrop-item.active{background:var(--bg3)}
+.sdrop-item .sdrop-icon{font-size:14px;flex-shrink:0}
+.sdrop-item .sdrop-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg)}
+.sdrop-item .sdrop-sub{font-size:11px;color:var(--fg3);flex-shrink:0}
+.sdrop-item mark{background:var(--accent);color:#fff;border-radius:2px;padding:0 2px}
+.sdrop-empty{padding:10px 12px;font-size:12px;color:var(--fg3);text-align:center}
+
 /* ===== RESPONSIVE — Mobile ===== */
 @media(max-width:767px){
   /* Header: stack search below logo+buttons */
@@ -704,6 +743,7 @@ body.focus-mode #focus-banner{display:block}
     </a>
     <div id="searchWrap">
       <input id="searchInput" type="text" placeholder="Pesquisar ou / para comandos" autocomplete="off" aria-label="Busca e comandos">
+      <div id="searchDropdown" role="listbox" aria-label="Resultados da busca"></div>
     </div>
     <div class="header-right">
       <div class="modes" id="modeBar"></div>
@@ -818,9 +858,9 @@ const THEMES = [
 
 const MODES = {
   generic: {label:'Generic', icon:'🏠', widgets:['clock','weather','links','notes']},
-  trading: {label:'Trading', icon:'📈', widgets:['market','feed','notes']},
-  content: {label:'Content', icon:'📰', widgets:['feed','ai','notes']},
-  builder: {label:'Builder', icon:'🔧', widgets:['ai','notes','embed','links']},
+  trading: {label:'Trading', icon:'📈', widgets:['market','feed','notes','toollinks_trading']},
+  content: {label:'Content', icon:'📰', widgets:['feed','ai','notes','toollinks_content']},
+  builder: {label:'Builder', icon:'🔧', widgets:['ai','notes','embed','links','toollinks_builder']},
 };
 
 const TRADING_TOOLS_DEF = [
@@ -859,6 +899,24 @@ const TRADING_TOOLS_DEF = [
      {title:'Ethena',       url:'https://app.ethena.fi'},
      {title:'DefiLlama',    url:'https://defillama.com'},
      {title:'Beefy',        url:'https://app.beefy.finance'},
+   ]},
+];
+
+const CONTENT_TOOLS_DEF = [
+  {id:'social', label:'Redes Sociais', icon:'📱',
+   defaults:[
+     {title:'X / Twitter',  url:'https://x.com'},
+     {title:'Instagram',    url:'https://www.instagram.com'},
+     {title:'LinkedIn',     url:'https://www.linkedin.com'},
+     {title:'YouTube',      url:'https://www.youtube.com'},
+     {title:'TikTok',       url:'https://www.tiktok.com'},
+     {title:'Threads',      url:'https://www.threads.net'},
+     {title:'Facebook',     url:'https://www.facebook.com'},
+     {title:'Pinterest',    url:'https://www.pinterest.com'},
+     {title:'Substack',     url:'https://substack.com'},
+     {title:'Medium',       url:'https://medium.com'},
+     {title:'Beehiiv',      url:'https://www.beehiiv.com'},
+     {title:'Buffer',       url:'https://buffer.com'},
    ]},
 ];
 
@@ -919,6 +977,10 @@ const WIDGET_DEF = {
   todo:     {label:'To-Do',        icon:'✅'},
   pomodoro: {label:'Pomodoro',     icon:'⏱'},
   quote:    {label:'Daily Quote',  icon:'💬'},
+  // Module-specific link hub widgets
+  toollinks_builder: {label:'Builder Tools', icon:'🔧'},
+  toollinks_trading: {label:'Trading Links', icon:'📊'},
+  toollinks_content: {label:'Redes Sociais', icon:'📱'},
 };
 
 // ═══════════════════════════════════════════════════════
@@ -1243,14 +1305,8 @@ function renderAll() {
     if (!currentIds.has(node.dataset.wid)) node.remove();
   });
 
-  // Remove tool sections when switching modes
-  c.querySelectorAll('.builder-tools').forEach(el => {
-    const ns = el.dataset.ns;
-    if ((ns === 'builder' && S.mode !== 'builder') ||
-        (ns === 'trading' && S.mode !== 'trading')) {
-      el.remove();
-    }
-  });
+  // Clean up any legacy standalone tool sections (now replaced by widgets)
+  c.querySelectorAll('.builder-tools[data-ns]').forEach(el => el.remove());
 
   // Add / update widgets
   S.widgets.forEach(w => {
@@ -1267,34 +1323,7 @@ function renderAll() {
     if (cb) cb.textContent = w.collapsed ? '▲' : '▼';
   });
 
-  // Helper: append a tool section below all widgets
-  function appendToolSection(sectionEl, nsName) {
-    sectionEl.dataset.ns = nsName;
-    if (isMobile()) {
-      sectionEl.style.position = 'relative';
-      sectionEl.style.left = '';
-      sectionEl.style.right = '';
-      sectionEl.style.top = '';
-      sectionEl.style.marginTop = '8px';
-    } else {
-      const maxRow = S.widgets.reduce((m, w) => Math.max(m, (w.row||1) + (w.h||COL_H)), 1);
-      sectionEl.style.position = 'absolute';
-      sectionEl.style.left  = GPAD + 'px';
-      sectionEl.style.right = GPAD + 'px';
-      sectionEl.style.top   = (toPx(maxRow) + CELL + 20) + 'px';
-    }
-    c.appendChild(sectionEl);
-  }
-
-  // Builder tool cards
-  if (S.mode === 'builder' && !c.querySelector('.builder-tools[data-ns="builder"]')) {
-    appendToolSection(buildBuilderTools(), 'builder');
-  }
-
-  // Trading tool cards
-  if (S.mode === 'trading' && !c.querySelector('.builder-tools[data-ns="trading"]')) {
-    appendToolSection(buildTradingTools(), 'trading');
-  }
+  // Tool link widgets are now regular widgets — no special rendering needed here
 
   fitCanvas();
 }
@@ -1374,6 +1403,7 @@ function buildToolSection(defs, nsPrefix) {
 // ═══════════════════════════════════════════════════════
 function buildBuilderTools()  { return buildToolSection(BUILDER_TOOLS_DEF, 'btool'); }
 function buildTradingTools()  { return buildToolSection(TRADING_TOOLS_DEF, 'ttool'); }
+function buildContentTools()  { return buildToolSection(CONTENT_TOOLS_DEF,  'ctool'); }
 
 function buildWidgetShell(w) {
   const def = WIDGET_DEF[w.type] || {label: w.type, icon: '📦'};
@@ -1551,8 +1581,80 @@ function mountWidgetContent(w, body) {
     case 'todo':     mountTodo(w, body);     break;
     case 'pomodoro': mountPomodoro(w, body); break;
     case 'quote':    mountQuote(w, body);    break;
+    case 'toollinks_builder': mountToolLinks(w, body, BUILDER_TOOLS_DEF, 'btool'); break;
+    case 'toollinks_trading': mountToolLinks(w, body, TRADING_TOOLS_DEF, 'ttool'); break;
+    case 'toollinks_content': mountToolLinks(w, body, CONTENT_TOOLS_DEF,  'ctool'); break;
     default: body.innerHTML = `<div class="empty">Unknown widget</div>`;
   }
+}
+
+// ═══════════════════════════════════════════════════════
+// WIDGET: TOOL LINKS (Builder / Trading / Content hubs)
+// Renders a set of tool-card link sections inside a widget.
+// ═══════════════════════════════════════════════════════
+function mountToolLinks(w, body, defs, nsPrefix) {
+  body.style.overflowY = 'auto';
+  body.style.padding = '10px';
+  body.innerHTML = '';
+
+  defs.forEach(tool => {
+    const key = `${nsPrefix}_${tool.id}`;
+    const saved = ls_get(key, null);
+    const links = saved || tool.defaults.map(d => ({...d, id: uid()}));
+    if (!saved) ls_set(key, links);
+
+    const card = document.createElement('div');
+    card.style.cssText = 'margin-bottom:10px;border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;';
+
+    function renderCard() {
+      const curLinks = ls_get(key, []);
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);font-size:12px;font-weight:600;border-bottom:1px solid var(--border)">
+          <span>${tool.icon}</span>${tool.label}
+        </div>
+        <div style="padding:10px 12px;">
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+            ${curLinks.map(lnk => `
+              <div style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;white-space:nowrap">
+                <a href="${esc(lnk.url)}" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:var(--fg);text-decoration:none;display:flex;align-items:center;gap:4px">
+                  <img src="https://www.google.com/s2/favicons?domain=${esc(rootDomain(lnk.url))}&sz=32" width="13" height="13" style="border-radius:2px">
+                  ${esc(lnk.title)}
+                </a>
+                <button data-lid="${esc(lnk.id)}" style="background:none;border:none;color:var(--fg3);cursor:pointer;font-size:10px;padding:0 0 0 2px" title="Remover">✕</button>
+              </div>`).join('')}
+          </div>
+          <div style="display:flex;gap:6px;padding-top:8px;border-top:1px solid var(--border)">
+            <input class="tl-title" placeholder="Título" style="flex:1;min-width:60px;padding:4px 7px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);color:var(--fg);font-size:12px">
+            <input class="tl-url" placeholder="https://..." style="flex:2;min-width:80px;padding:4px 7px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);color:var(--fg);font-size:12px">
+            <button class="btn btn-primary btn-sm tl-add">+</button>
+          </div>
+        </div>`;
+
+      card.querySelectorAll('[data-lid]').forEach(b => {
+        b.addEventListener('click', () => {
+          const cur = ls_get(key, []);
+          ls_set(key, cur.filter(l => l.id !== b.dataset.lid));
+          renderCard();
+        });
+      });
+      card.querySelector('.tl-add').addEventListener('click', () => {
+        const ti = card.querySelector('.tl-title').value.trim();
+        const u  = card.querySelector('.tl-url').value.trim();
+        if (!ti) { toast('Informe um título','err'); return; }
+        if (!validURL(u)) { toast('URL inválida','err'); return; }
+        const cur = ls_get(key, []);
+        cur.push({id: uid(), title: ti, url: u});
+        ls_set(key, cur);
+        renderCard();
+      });
+      card.querySelector('.tl-url').addEventListener('keydown', e => {
+        if (e.key === 'Enter') card.querySelector('.tl-add').click();
+      });
+    }
+
+    renderCard();
+    body.appendChild(card);
+  });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2279,24 +2381,153 @@ document.addEventListener('keydown', e => {
   }
 });
 
-el('searchInput').addEventListener('keydown', e => {
-  if (e.key !== 'Enter') return;
-  const raw = e.target.value.trim();
-  e.target.value = '';
-  if (!raw.startsWith('/')) return;
-  const parts = raw.slice(1).split(' ');
-  const cmd = parts[0].toLowerCase();
-  const arg = parts[1]?.toLowerCase();
+// ═══════════════════════════════════════════════════════
+// SEARCH — live dropdown + /commands on Enter
+// ═══════════════════════════════════════════════════════
+(function initSearch() {
+  const inp  = el('searchInput');
+  const drop = el('searchDropdown');
+  let _selIdx = -1;
 
-  if (cmd === 'mode' && arg && MODES[arg]) { switchMode(arg); toast(`Modo: ${MODES[arg].label}`,'info'); }
-  else if (cmd === 'theme' && arg) { applyTheme(arg); toast(`Tema: ${arg}`,'info'); }
-  else if (cmd === 'add' && arg) { addWidget(arg); }
-  else if (cmd === 'save') { saveAll(); }
-  else if (cmd === 'login') { openModal('authModal'); }
-  else if (cmd === 'logout') { supaSignOut(); }
-  else if (cmd === 'clear') { if(confirm('Limpar todos os widgets?')) { S.widgets=[]; renderAll(); persistState(); } }
-  else { toast(`Comando não reconhecido: /${cmd}`,'err'); }
-});
+  function highlight(text, q) {
+    if (!q) return esc(text);
+    const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+    return esc(text).replace(re, '<mark>$1</mark>');
+  }
+
+  function collectResults(q) {
+    const results = [];
+    const ql = q.toLowerCase();
+
+    S.widgets.forEach(w => {
+      // Notes: search content
+      if (w.type === 'notes' && w.data.content) {
+        const lines = w.data.content.split('\n').filter(l => l.toLowerCase().includes(ql));
+        lines.slice(0, 3).forEach(line => {
+          results.push({type:'note', icon:'📝', title: line.trim(), sub:'Notes', wid: w.id, action:'focus'});
+        });
+      }
+      // To-Do: search items
+      if (w.type === 'todo' && w.data.items) {
+        w.data.items.filter(i => i.title?.toLowerCase().includes(ql)).slice(0, 5).forEach(item => {
+          results.push({type:'todo', icon: item.status==='completed'?'✅':'⬜', title: item.title, sub:'To-Do', wid: w.id, action:'focus'});
+        });
+      }
+      // Links: search links
+      if (w.type === 'links' && w.data.links) {
+        w.data.links.filter(l => l.label?.toLowerCase().includes(ql) || l.url?.toLowerCase().includes(ql)).slice(0, 4).forEach(lnk => {
+          results.push({type:'link', icon:'🔗', title: lnk.label||lnk.url, sub: lnk.url, wid: w.id, action:'open', url: lnk.url});
+        });
+      }
+    });
+    return results;
+  }
+
+  function scrollToWidget(wid) {
+    const node = canvas()?.querySelector(`.widget[data-wid="${wid}"]`);
+    if (!node) return;
+    node.scrollIntoView({behavior:'smooth', block:'center'});
+    node.style.outline = '3px solid var(--accent)';
+    setTimeout(() => { node.style.outline = '3px solid var(--bg)'; }, 1800);
+  }
+
+  function renderDrop(q) {
+    if (!q || q.startsWith('/')) { drop.classList.remove('open'); return; }
+    const results = collectResults(q);
+    _selIdx = -1;
+    if (results.length === 0) {
+      drop.innerHTML = `<div class="sdrop-empty">Nenhum resultado para "<strong>${esc(q)}</strong>"</div>`;
+    } else {
+      // Group by type
+      const groups = {};
+      results.forEach(r => { (groups[r.type] = groups[r.type]||[]).push(r); });
+      const labels = {note:'Notas', todo:'To-Do', link:'Links'};
+      drop.innerHTML = Object.entries(groups).map(([type, items]) => `
+        <div class="sdrop-section">
+          <div class="sdrop-label">${labels[type]||type}</div>
+          ${items.map((r,i) => `
+            <div class="sdrop-item" data-idx="${i}" data-action="${r.action}" data-wid="${r.wid}" data-url="${esc(r.url||'')}">
+              <span class="sdrop-icon">${r.icon}</span>
+              <span class="sdrop-title">${highlight(r.title||'', q)}</span>
+              <span class="sdrop-sub">${esc(r.sub||'')}</span>
+            </div>`).join('')}
+        </div>`).join('');
+    }
+    drop.classList.add('open');
+
+    drop.querySelectorAll('.sdrop-item').forEach(item => {
+      item.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const {action, wid, url} = item.dataset;
+        if (action === 'open' && url) window.open(url, '_blank', 'noopener');
+        else if (action === 'focus') scrollToWidget(wid);
+        closeDrop();
+      });
+    });
+  }
+
+  function closeDrop() {
+    drop.classList.remove('open');
+    inp.value = '';
+    _selIdx = -1;
+  }
+
+  inp.addEventListener('input', () => {
+    const q = inp.value.trim();
+    if (q.startsWith('/')) { drop.classList.remove('open'); return; }
+    renderDrop(q);
+  });
+
+  inp.addEventListener('keydown', e => {
+    const items = drop.querySelectorAll('.sdrop-item');
+
+    if (drop.classList.contains('open') && items.length) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        _selIdx = Math.min(_selIdx + 1, items.length - 1);
+        items.forEach((el,i) => el.classList.toggle('active', i === _selIdx));
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        _selIdx = Math.max(_selIdx - 1, 0);
+        items.forEach((el,i) => el.classList.toggle('active', i === _selIdx));
+        return;
+      }
+      if (e.key === 'Enter' && _selIdx >= 0) {
+        e.preventDefault();
+        items[_selIdx].dispatchEvent(new MouseEvent('mousedown'));
+        return;
+      }
+    }
+
+    // /commands on Enter
+    if (e.key === 'Enter') {
+      const raw = inp.value.trim();
+      inp.value = '';
+      closeDrop();
+      if (!raw.startsWith('/')) return;
+      const parts = raw.slice(1).split(' ');
+      const cmd = parts[0].toLowerCase();
+      const arg = parts[1]?.toLowerCase();
+      if (cmd === 'mode' && arg && MODES[arg]) { switchMode(arg); toast(`Modo: ${MODES[arg].label}`,'info'); }
+      else if (cmd === 'theme' && arg) { applyTheme(arg); toast(`Tema: ${arg}`,'info'); }
+      else if (cmd === 'add' && arg) { addWidget(arg); }
+      else if (cmd === 'save') { saveAll(); }
+      else if (cmd === 'login') { openModal('authModal'); }
+      else if (cmd === 'logout') { supaSignOut(); }
+      else if (cmd === 'clear') { if(confirm('Limpar todos os widgets?')) { S.widgets=[]; renderAll(); persistState(); } }
+      else { toast(`Comando não reconhecido: /${cmd}`,'err'); }
+    }
+
+    if (e.key === 'Escape') { closeDrop(); inp.blur(); }
+  });
+
+  // Close on outside click
+  document.addEventListener('mousedown', e => {
+    if (!el('searchWrap').contains(e.target)) closeDrop();
+  });
+})();
 
 // ═══════════════════════════════════════════════════════
 // CLOSE BUTTONS
