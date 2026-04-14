@@ -801,6 +801,26 @@ body.focus-mode #focus-banner{display:block}
         <button type="submit" class="btn btn-primary" id="authSubmit">Entrar</button>
       </div>
     </form>
+    <details style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
+      <summary style="font-size:12px;color:var(--fg3);cursor:pointer;user-select:none">⚙ Configurar Supabase (opcional)</summary>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+        <p style="font-size:11px;color:var(--fg3)">Para sincronização na nuvem. Suas credenciais ficam apenas no seu browser.</p>
+        <div class="form-row">
+          <label style="font-size:12px">URL do Projeto</label>
+          <input type="text" id="cfgSupaUrl" placeholder="https://xxxx.supabase.co" autocomplete="off"
+            style="width:100%;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);color:var(--fg);font-size:12px">
+        </div>
+        <div class="form-row">
+          <label style="font-size:12px">Anon Key</label>
+          <input type="password" id="cfgSupaKey" placeholder="eyJhbGci..." autocomplete="off"
+            style="width:100%;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);color:var(--fg);font-size:12px">
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button type="button" class="btn btn-ghost btn-sm" id="cfgSupaClear">Limpar</button>
+          <button type="button" class="btn btn-primary btn-sm" id="cfgSupaSave">Salvar</button>
+        </div>
+      </div>
+    </details>
   </div>
 </div>
 
@@ -842,10 +862,13 @@ body.focus-mode #focus-banner{display:block}
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════
-// CONFIG
+// CONFIG — Supabase credentials (loaded from localStorage)
+// To enable cloud sync: go to Settings (⚙) and enter your
+// Supabase URL and anon key. They are stored only in your
+// browser and never committed to the repository.
 // ═══════════════════════════════════════════════════════
-const SUPA_URL  = 'https://vougtmtkonvhmkdffair.supabase.co';
-const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvdWd0bXRrb252aG1rZGZmYWlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODgzNjQsImV4cCI6MjA5MTI2NDM2NH0.i5d6ko-kJVMFXP7KS55yifoiX9rw8zq3brrG6__AFtg';
+const SUPA_URL  = ls_get('cfg_supa_url', '');
+const SUPA_KEY  = ls_get('cfg_supa_key', '');
 
 const THEMES = [
   {id:'dark',   label:'Dark',     icon:'🌑'},
@@ -1090,10 +1113,47 @@ function debounce(fn, ms) {
 function uid() { return Math.random().toString(36).slice(2,9); }
 
 function validURL(s) {
-  try { new URL(s); return true; } catch { return false; }
+  try {
+    const u = new URL(s);
+    // Only allow http/https — block javascript:, data:, vbscript:, etc.
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch { return false; }
 }
 function rootDomain(url) {
   try { return new URL(url).hostname; } catch { return ''; }
+}
+
+// ── Input sanitization helpers ──────────────────────────
+const MAX_TITLE  = 120;   // max chars for titles / labels
+const MAX_URL    = 2048;  // max URL length
+const MAX_NOTE   = 50000; // max notes content
+const MAX_TODO   = 300;   // max single todo text
+const MAX_PROMPT = 4000;  // max AI prompt
+
+// Strip leading/trailing whitespace and enforce max length.
+// Returns { ok, value, error }
+function sanitizeText(raw, maxLen = MAX_TITLE, fieldName = 'Campo') {
+  if (typeof raw !== 'string') return { ok: false, value: '', error: `${fieldName} inválido` };
+  const v = raw.trim().slice(0, maxLen);
+  if (v.length === 0) return { ok: false, value: '', error: `${fieldName} não pode ser vazio` };
+  return { ok: true, value: v };
+}
+
+function sanitizeURL(raw) {
+  if (typeof raw !== 'string') return { ok: false, value: '', error: 'URL inválida' };
+  const v = raw.trim().slice(0, MAX_URL);
+  if (!validURL(v)) return { ok: false, value: '', error: 'URL inválida (use http:// ou https://)' };
+  return { ok: true, value: v };
+}
+
+// Sanitize an object coming from localStorage — ensure expected shape
+function sanitizeWidgets(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.filter(w =>
+    w && typeof w === 'object' &&
+    typeof w.id === 'string' &&
+    typeof w.type === 'string'
+  ).slice(0, 100); // cap at 100 widgets
 }
 
 function ls_get(k, def) {
@@ -1169,7 +1229,7 @@ function switchMode(id, save=true) {
   // load saved layout for this mode, or use defaults
   const saved = ls_get(`layout_${id}`, null);
   if (saved && Array.isArray(saved) && saved.length) {
-    S.widgets = ensureModeWidgets(id, saved);
+    S.widgets = ensureModeWidgets(id, sanitizeWidgets(saved));
   } else {
     S.widgets = MODES[id].widgets.map(type => ({id: uid(), type, collapsed: false, data: {}}));
   }
@@ -1396,12 +1456,13 @@ function buildToolSection(defs, nsPrefix) {
       });
 
       card.querySelector('.tl-add').addEventListener('click', () => {
-        const ti = card.querySelector('.tl-title').value.trim();
-        const u  = card.querySelector('.tl-url').value.trim();
-        if (!ti) { toast('Informe um título','err'); return; }
-        if (!validURL(u)) { toast('URL inválida','err'); return; }
+        const tRes = sanitizeText(card.querySelector('.tl-title').value, MAX_TITLE, 'Título');
+        const uRes = sanitizeURL(card.querySelector('.tl-url').value);
+        if (!tRes.ok) { toast(tRes.error,'err'); return; }
+        if (!uRes.ok) { toast(uRes.error,'err'); return; }
         const cur = ls_get(key, []);
-        cur.push({id: uid(), title: ti, url: u});
+        if (cur.length >= 50) { toast('Máximo de 50 links por seção','err'); return; }
+        cur.push({id: uid(), title: tRes.value, url: uRes.value});
         ls_set(key, cur);
         renderCard();
       });
@@ -1657,12 +1718,13 @@ function mountToolLinks(w, body, defs, nsPrefix) {
         });
       });
       card.querySelector('.tl-add').addEventListener('click', () => {
-        const ti = card.querySelector('.tl-title').value.trim();
-        const u  = card.querySelector('.tl-url').value.trim();
-        if (!ti) { toast('Informe um título','err'); return; }
-        if (!validURL(u)) { toast('URL inválida','err'); return; }
+        const tRes = sanitizeText(card.querySelector('.tl-title').value, MAX_TITLE, 'Título');
+        const uRes = sanitizeURL(card.querySelector('.tl-url').value);
+        if (!tRes.ok) { toast(tRes.error,'err'); return; }
+        if (!uRes.ok) { toast(uRes.error,'err'); return; }
         const cur = ls_get(key, []);
-        cur.push({id: uid(), title: ti, url: u});
+        if (cur.length >= 50) { toast('Máximo de 50 links por seção','err'); return; }
+        cur.push({id: uid(), title: tRes.value, url: uRes.value});
         ls_set(key, cur);
         renderCard();
       });
@@ -1779,11 +1841,12 @@ function mountLinks(w, body) {
     });
 
     el(`lnk-add-${w.id}`).addEventListener('click', () => {
-      const title = el(`lnk-t-${w.id}`).value.trim();
-      const url   = el(`lnk-u-${w.id}`).value.trim();
-      if (!title) { toast('Informe um título', 'err'); return; }
-      if (!validURL(url)) { toast('URL inválida', 'err'); return; }
-      w.data.links.push({title, url});
+      const tRes = sanitizeText(el(`lnk-t-${w.id}`).value, MAX_TITLE, 'Título');
+      const uRes = sanitizeURL(el(`lnk-u-${w.id}`).value);
+      if (!tRes.ok) { toast(tRes.error,'err'); return; }
+      if (!uRes.ok) { toast(uRes.error,'err'); return; }
+      if ((w.data.links||[]).length >= 50) { toast('Máximo de 50 links','err'); return; }
+      w.data.links.push({title: tRes.value, url: uRes.value});
       updateData(w.id, {links: w.data.links});
       render();
     });
@@ -1930,7 +1993,7 @@ function mountNotes(w, body) {
   const ta   = el(`na-${w.id}`);
   const hint = el(`ns-${w.id}`);
   const save = debounce(() => {
-    updateData(w.id, {content: ta.value});
+    updateData(w.id, {content: ta.value.slice(0, MAX_NOTE)});
     hint.textContent = t('notes_saved');
     hint.classList.add('show');
     setTimeout(() => hint.classList.remove('show'), 1500);
@@ -1994,11 +2057,12 @@ function mountFeed(w, body) {
     }));
 
     el(`fi-add-${w.id}`).addEventListener('click', () => {
-      const title = el(`fi-t-${w.id}`).value.trim();
-      const url   = el(`fi-u-${w.id}`).value.trim();
-      if (!title) { toast('Informe um título','err'); return; }
-      if (!validURL(url)) { toast('URL inválida','err'); return; }
-      w.data.items.push({id: uid(), title, url, status:'pending'});
+      const tRes = sanitizeText(el(`fi-t-${w.id}`).value, MAX_TITLE, 'Título');
+      const uRes = sanitizeURL(el(`fi-u-${w.id}`).value);
+      if (!tRes.ok) { toast(tRes.error,'err'); return; }
+      if (!uRes.ok) { toast(uRes.error,'err'); return; }
+      if ((w.data.items||[]).length >= 200) { toast('Máximo de 200 items','err'); return; }
+      w.data.items.push({id: uid(), title: tRes.value, url: uRes.value, status:'pending'});
       updateData(w.id,{items:w.data.items});
       render();
     });
@@ -2049,7 +2113,8 @@ function mountAI(w, body) {
 }
 
 async function runAI(w) {
-  const prompt = el(`ai-p-${w.id}`)?.value?.trim();
+  const raw    = el(`ai-p-${w.id}`)?.value || '';
+  const prompt = raw.trim().slice(0, MAX_PROMPT);
   const resp   = el(`ai-resp-${w.id}`);
   if (!prompt) { toast('Digite um prompt','err'); return; }
   if (!w.data.apiKey) { toast('Configure sua API key em ⚙ Config','err'); return; }
@@ -2096,10 +2161,10 @@ function mountEmbed(w, body) {
       ${w.data.url ? `<iframe class="embed-frame" src="${esc(w.data.url)}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy" title="Embed"></iframe>` : ''}
     </div>`;
   el(`em-go-${w.id}`).addEventListener('click', () => {
-    const url = el(`em-u-${w.id}`).value.trim();
-    if (!validURL(url)) { toast('URL inválida','err'); return; }
-    updateData(w.id, {url});
-    el(`em-c-${w.id}`).innerHTML = `<iframe class="embed-frame" src="${esc(url)}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy" title="Embed"></iframe>`;
+    const uRes = sanitizeURL(el(`em-u-${w.id}`).value);
+    if (!uRes.ok) { toast(uRes.error,'err'); return; }
+    updateData(w.id, {url: uRes.value});
+    el(`em-c-${w.id}`).innerHTML = `<iframe class="embed-frame" src="${esc(uRes.value)}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy" title="Embed"></iframe>`;
   });
   el(`em-u-${w.id}`).addEventListener('keydown', e => { if(e.key==='Enter') el(`em-go-${w.id}`).click(); });
 }
@@ -2153,10 +2218,11 @@ function mountTodo(w, body) {
     });
     const inp = el(`td-t-${w.id}`);
     el(`td-add-${w.id}`).addEventListener('click', () => {
-      const text = inp.value.trim();
-      if (!text) return;
+      const tRes = sanitizeText(inp.value, MAX_TODO, 'Tarefa');
+      if (!tRes.ok) return;
+      if ((w.data.todos||[]).length >= 200) { toast('Máximo de 200 tarefas','err'); return; }
       const pri = el(`td-p-${w.id}`).value;
-      w.data.todos.push({id: uid(), text, pri, done: false});
+      w.data.todos.push({id: uid(), text: tRes.value, pri, done: false});
       updateData(w.id, {todos: w.data.todos}); render();
     });
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') el(`td-add-${w.id}`).click(); });
@@ -2558,6 +2624,32 @@ document.addEventListener('keydown', e => {
 // ═══════════════════════════════════════════════════════
 // CLOSE BUTTONS
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// SUPABASE CONFIG — stored in localStorage, never in code
+// ═══════════════════════════════════════════════════════
+el('authModal').addEventListener('click', () => {
+  // Pre-fill config fields with saved values (masked)
+  const u = ls_get('cfg_supa_url','');
+  const k = ls_get('cfg_supa_key','');
+  if (el('cfgSupaUrl')) el('cfgSupaUrl').value = u;
+  if (el('cfgSupaKey')) el('cfgSupaKey').value = k ? '••••••••' : '';
+});
+el('cfgSupaSave')?.addEventListener('click', () => {
+  const u = el('cfgSupaUrl').value.trim();
+  const k = el('cfgSupaKey').value.trim();
+  if (u && !u.startsWith('https://')) { toast('URL inválida','err'); return; }
+  if (u) ls_set('cfg_supa_url', u);
+  if (k && k !== '••••••••') ls_set('cfg_supa_key', k);
+  toast('Credenciais salvas — recarregue para ativar','ok');
+});
+el('cfgSupaClear')?.addEventListener('click', () => {
+  localStorage.removeItem('cfg_supa_url');
+  localStorage.removeItem('cfg_supa_key');
+  el('cfgSupaUrl').value = '';
+  el('cfgSupaKey').value = '';
+  toast('Credenciais removidas','ok');
+});
+
 el('authClose').addEventListener('click',  () => closeModal('authModal'));
 el('addClose').addEventListener('click',   () => closeModal('addModal'));
 el('themeClose').addEventListener('click', () => closeModal('themeModal'));
@@ -2773,7 +2865,7 @@ function init() {
   S.mode = savedMode;
   const savedWidgets = ls_get(`layout_${savedMode}`, null);
   if (savedWidgets && Array.isArray(savedWidgets) && savedWidgets.length > 0) {
-    S.widgets = ensureModeWidgets(savedMode, savedWidgets);
+    S.widgets = ensureModeWidgets(savedMode, sanitizeWidgets(savedWidgets));
   } else {
     S.widgets = MODES[savedMode].widgets.map(type => ({id: uid(), type, collapsed: false, data: {}}));
   }
