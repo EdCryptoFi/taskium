@@ -59,6 +59,15 @@
 }
 </script>
 
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DJXZ7WRR8K"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DJXZ7WRR8K');
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 /* ===== RESET ===== */
@@ -330,7 +339,7 @@ input,textarea,select{font-family:inherit;font-size:13px;outline:none}
 }
 
 /* ===== MARKET EDIT MODAL ===== */
-.market-edit-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;margin-bottom:12px}
+.market-edit-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
 .market-edit-item{
   display:flex;align-items:center;gap:8px;
   padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);
@@ -390,10 +399,13 @@ input,textarea,select{font-family:inherit;font-size:13px;outline:none}
 
 /* ===== NOTES ===== */
 .notes-area{
-  width:100%;min-height:120px;resize:vertical;
+  width:100%;min-height:120px;resize:none;
   background:var(--bg3);border:1px solid var(--border);
   border-radius:var(--r2);color:var(--fg);padding:10px;
   line-height:1.6;
+  /* auto-grow: overflow hidden + field-sizing where supported */
+  overflow:hidden;
+  field-sizing:content;
 }
 .notes-area:focus{border-color:var(--accent)}
 .notes-saved{font-size:11px;color:var(--green);margin-top:6px;opacity:0;transition:opacity .3s}
@@ -403,7 +415,7 @@ input,textarea,select{font-family:inherit;font-size:13px;outline:none}
 .feed-tabs{display:flex;gap:4px;margin-bottom:12px}
 .feed-tab{padding:5px 12px;border-radius:20px;font-size:12px;background:var(--bg3);border:1px solid var(--border);color:var(--fg2)}
 .feed-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
-.feed-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto}
+.feed-list{display:flex;flex-direction:column;gap:6px}
 .feed-item{
   display:flex;align-items:center;gap:8px;
   padding:8px 10px;background:var(--bg3);border-radius:var(--r2);
@@ -422,17 +434,19 @@ input,textarea,select{font-family:inherit;font-size:13px;outline:none}
 
 /* ===== AI PROMPT ===== */
 .ai-prompt-area{
-  width:100%;min-height:90px;resize:vertical;
+  width:100%;min-height:90px;resize:none;
   background:var(--bg3);border:1px solid var(--border);
   border-radius:var(--r2);color:var(--fg);padding:10px;line-height:1.5;
   margin-bottom:8px;
+  overflow:hidden;
+  field-sizing:content;
 }
 .ai-prompt-area:focus{border-color:var(--accent)}
 .ai-actions{display:flex;gap:8px;align-items:center}
 .ai-response{
   margin-top:12px;padding:12px;background:var(--bg3);
   border-radius:var(--r2);border:1px solid var(--border);
-  font-size:13px;line-height:1.6;white-space:pre-wrap;max-height:200px;overflow-y:auto;
+  font-size:13px;line-height:1.6;white-space:pre-wrap;
 }
 .ai-config{margin-top:12px;display:flex;flex-direction:column;gap:8px}
 .ai-config input,.ai-config select{
@@ -442,7 +456,7 @@ input,textarea,select{font-family:inherit;font-size:13px;outline:none}
 .ai-warning{font-size:11px;color:var(--yellow);margin-top:4px}
 
 /* ===== TO-DO ===== */
-.todo-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;margin-bottom:10px}
+.todo-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
 .todo-item{
   display:flex;align-items:center;gap:8px;
   padding:8px 10px;background:var(--bg3);border-radius:var(--r2);border:1px solid var(--border);
@@ -667,8 +681,8 @@ body.focus-mode #focus-banner{display:block}
   /* Uncollapse / allow natural height */
   .widget.collapsed .widget-body{display:none}
   .widget:not(.collapsed){height:auto !important}
-  /* Limit tall widgets so page doesn't get endless; user can scroll within */
-  .widget-body{max-height:400px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  /* Let widget body expand naturally — no forced scroll containers */
+  .widget-body{overflow:visible}
 
   /* Touch-friendly tap targets in widget heads */
   .widget-head{min-height:44px}
@@ -677,13 +691,7 @@ body.focus-mode #focus-banner{display:block}
   /* Clock: tighten on small screens */
   .clock-time{font-size:32px}
 
-  /* Market list scroll */
-  .market-list{max-height:280px;overflow-y:auto}
-
-  /* Feed list */
-  .feed-list{max-height:260px}
-
-  /* Notes textarea */
+  /* Notes textarea — mobile min */
   .notes-area{min-height:80px}
 
   /* Hide resize handle on mobile (no drag/resize) */
@@ -1985,6 +1993,14 @@ el('marketSaveBtn').addEventListener('click', () => {
 // ═══════════════════════════════════════════════════════
 // WIDGET: NOTES
 // ═══════════════════════════════════════════════════════
+/* Auto-grow textarea: expands to content height, no scrollbar */
+function autoGrow(ta) {
+  // field-sizing:content handles modern browsers; this is the JS fallback
+  if (getComputedStyle(ta).fieldSizing === 'content') return; // native handles it
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+}
+
 function mountNotes(w, body) {
   const saved = w.data.content || '';
   body.innerHTML = `
@@ -1992,13 +2008,15 @@ function mountNotes(w, body) {
     <div class="notes-saved" id="ns-${w.id}">${t('notes_saved')}</div>`;
   const ta   = el(`na-${w.id}`);
   const hint = el(`ns-${w.id}`);
+  // Initial size
+  requestAnimationFrame(() => autoGrow(ta));
   const save = debounce(() => {
     updateData(w.id, {content: ta.value.slice(0, MAX_NOTE)});
     hint.textContent = t('notes_saved');
     hint.classList.add('show');
     setTimeout(() => hint.classList.remove('show'), 1500);
   }, 500);
-  ta.addEventListener('input', save);
+  ta.addEventListener('input', () => { autoGrow(ta); save(); });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2108,6 +2126,12 @@ function mountAI(w, body) {
       toast('Config salvo', 'ok');
     });
     el(`ai-run-${w.id}`).addEventListener('click', () => runAI(w));
+    // Auto-grow AI prompt textarea
+    const aiTa = el(`ai-p-${w.id}`);
+    if (aiTa) {
+      requestAnimationFrame(() => autoGrow(aiTa));
+      aiTa.addEventListener('input', () => autoGrow(aiTa));
+    }
   }
   render();
 }
